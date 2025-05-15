@@ -50,6 +50,7 @@ Don't expect production quality.
 | [akBrentUp](src/akBrentUp) | Python tool to lift a matrix multiplication algorithm |
 | [akBrentWithSbr](src/akBrentWithSbr) | Python tool to solve Brent Equations<br>modulo 2 with symmetry breaking |
 | [akExtractMatMultSolution](src/akExtractMatMultSolution) | c# tool to convert between<br>various formats of matrix multiplication algorithms |
+| [akTensorMod2](src/akTensorMod2) | Python tool to down-convert general multiplication algorithm to its modulo 2 form |
 
 [1]: https://gdz.sub.uni-goettingen.de/id/PPN362160546_0013?tify=%7B%22view%22:%22info%22,%22pages%22:%5B358%5D%7D
 [2]: https://www.nature.com/articles/s41586-022-05172-4
