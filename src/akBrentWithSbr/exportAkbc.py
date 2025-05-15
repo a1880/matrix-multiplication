@@ -168,9 +168,11 @@ def run_akbc(akbc_file_name, cnf_file_name, akbc_log_file_name, debug):
     check(exe is not None, f"{akbc_exe} not found!")
     command = \
         [exe,
-         "--debug=3",
+         "--debug=2",
          f"--log={akbc_log_file_name}",
          "--no-wait",
+         "--no-simplify",
+         "--xcnf",
          f"{akbc_file_name}",
          f"{cnf_file_name}"]
 

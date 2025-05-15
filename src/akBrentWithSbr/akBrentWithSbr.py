@@ -415,9 +415,20 @@ def Or(a, b):
     return z3.Or(a, b)
 
 
+digits_in_product_index = 0
+
 def productChar(k):
     """translate product number to product char"""
-    return "abcdefghijklmnopqrstuvwxyz"[k]
+    global digits_in_product_index
+    if k <= 25:
+        return "abcdefghijklmnopqrstuvwxyz"[k]
+
+    if digits_in_product_index == 0:
+        """ we assume productChar() to be called
+            initially with maximum k """
+        digits_in_product_index = len(str(k))
+        
+    return f"_{str(k).zfill(digits_in_product_index)}"
 
 
 def shuffle_list(lst):
@@ -555,8 +566,8 @@ def main():
     #  default reaction is finish()
     define_ctrl_break_handler()
 
-    z3_home = r"K:\AK\Tools\z3-4.14.1-x64-win"
-    python_home = r"K:\AK\Tools\Python313"
+    z3_home = r"C:\AK\Tools\z3-4.14.1-x64-win"
+    python_home = r"C:\AK\Python\Python313"
 
     path_add(f"{z3_home}\\bin", "PATH")
     path_add(f"{z3_home}\\bin\\python", "PYTHONPATH")
@@ -575,7 +586,9 @@ def main():
 
     """Translate problem dimensions into ranges and parameters"""
     mmDim = MatMultDim.from_problem(cfg.problem)
-
+    """ initialize digits_in_product_index """
+    _ = productChar(mmDim.noOfProducts)
+    
     configure_z3(cfg)
 
     """Decision variables are kept in three 2D arrays

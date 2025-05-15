@@ -17,6 +17,7 @@ matrix times an $M \times P$ matrix, using $r$ elementary products.
 | [2x3x2_11](2x3x2_11) | small example |
 | [4x5x6_90](4x5x6_90) | solution of [Kauers+Wood][3] re-lifted |
 | [5x5x5_93](5x5x5_93) | solution of [Moosbauer+Poole][4] lifted|
+| [5x5x5_93](5x5x5_93b) | solution of [DeepMind/AlphaEvolve][5] |
 | [5x5x7_127](5x5x7_127) | solution of [Kauers+Wood][3] re-lifted |
 | [5x6x7_150](5x6x7_150) | solution of [Kauers+Wood][3] re-lifted |
 
@@ -28,3 +29,4 @@ re-lifted = general solution was lowered to F2 and then lifted to $\mathbb{Z}$
 [2]: https://www.nature.com/articles/s41586-022-05172-4
 [3]: https://arxiv.org/abs/2505.05896
 [4]: https://arxiv.org/abs/2502.04514
+[5]: https://storage.googleapis.com/deepmind-media/DeepMind.com/Blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/AlphaEvolve.pdf

@@ -42,8 +42,8 @@ class akSmtSolver:
         self.solver = solver
         self.smt_solver = smt_solver
         self.variables = variables
-        self.yices_exe = "K:/AK/Tools/yices-2.6.5/bin/yices-smt2.exe"
-        self.cvc5_exe = "K:/AK/Tools/cvc5-Win64-x86_64-static/bin/cvc5.exe"
+        self.yices_exe = "c:/AK/Tools/yices-2.6.5/bin/yices-smt2.exe"
+        self.cvc5_exe = "c:/AK/Tools/cvc5-Win64-x86_64-static/bin/cvc5.exe"
         if smt_solver == "yices":
             check(os.path.exists(self.yices_exe),
                   f"yices2 executable not found: {self.yices_exe}")
@@ -97,7 +97,7 @@ class akSmtSolver:
 
     def run_smt_solver(self, input_file_name, output_file_name):
         if self.smt_solver == "yices":
-            command = [self.yices_exe, "--verbosity=1", "--nthreads=8", input_file_name]
+            command = [self.yices_exe, "--verbosity=1", "--nthreads=28", input_file_name]
         else:
             command = [self.cvc5_exe, "--verbose", "--produce-models", input_file_name]
 
