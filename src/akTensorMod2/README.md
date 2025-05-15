@@ -19,7 +19,7 @@ Note that matrix $\[c\]$ is referenced in transposed order (columns and rows int
  ```
  
  The transformation between a general tensor file and a tensor.mod2 file is done by
- replacing all coefficients $c$ by their $c \text{mod} 2$ counterparts. Summands with even-valued coefficients
+ replacing all coefficients `c` by their `c mod 2` counterparts. Summands with even-valued coefficients
  are removed. Summands with odd-valued coefficients are kept with coefficient $1$.
  
  
