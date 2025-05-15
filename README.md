@@ -36,7 +36,9 @@ Three non-published papers are provided:
 | [Fast Matrix Multiplication Attempts](papers/Kemper%20-%202017%20-%20Fast%20Matrix%20Multiplication%20Attempts.pdf) | 2017: 13 slides |
 | [From F2 to Z Solutions for Brent Equations](papers/Kemper%20-%202025%20-%20From%20F2%20to%20Z%20Solutions%20for%20Brent%20Equations.pdf) | 2025: Description of the lifting method to derive a general multiplication algorithm from a modulo $2$ algorithm |
 
-Feedback and questions/suggestions are welcome!
+Feedback and questions/suggestions are welcome!<br>
+Contact: axel.kemper at Google's mail site
+
 
 ## Tools
 
