@@ -1,0 +1,19 @@
+#
+# File 's2x2x2_07.bini.mod2.txt'
+#
+# Solution for the 2x2x2_7 matrix multiplication problem in Bini matrix (mod 2!) format
+#
+# Created: 27-Apr-2025 19:00:30
+#
+Bini 2 2 2 7
+
+product Gamma         Alpha         Beta
+  1 ;   0  0  1  1 ;  0  0  1  1 ;  0  0  0  1
+  2 ;   1  1  0  0 ;  1  1  0  0 ;  1  0  0  0
+  3 ;   0  1  1  0 ;  0  1  1  0 ;  1  0  0  1
+  4 ;   0  1  0  0 ;  1  0  1  0 ;  1  1  0  0
+  5 ;   1  0  1  0 ;  0  1  0  0 ;  1  0  1  0
+  6 ;   0  1  0  1 ;  0  0  1  0 ;  0  1  0  1
+  7 ;   0  0  1  0 ;  0  1  0  1 ;  0  0  1  1
+
+#

@@ -1,0 +1,43 @@
+#
+# Yacas script s2x3x2_11.z3.yacas.txt created 24-Apr-2025 17:25:28
+#
+# Matrix multiplication method for 2x3x2_11
+#
+# Intermediate products: 11
+#
+# Debug mode! DebugLevel 3
+# Solver: Z3 4.14.1.0
+# Parallel threads: 1
+#
+# Solution time: Elapsed 7ms
+#
+# Minus signs reduced by literal sign flipping: 38
+#
+P01 := ( - a13 + a23) * b32;
+P02 := ( - a13) * (b21 + b31 - b32);
+P03 := (a13 + a22) * (b21 + b31);
+P04 := ( - a22) * (b12 + b21 - b22 + b31);
+P05 := a11 * (b11 - b12 + b22);
+P06 := ( - a22 + a23) * b31;
+P07 := (a11 + a22) * (b12 - b22);
+P08 := (a11 + a12) * b22;
+P09 := (a11 + a21) * b11;
+P10 := (a21 + a22) * b12;
+P11 := (a12 - a13) * b21;
+
+c11 :=              P03 + P04 + P05       + P07                   + P11;
+c12 :=        P02 + P03 + P04             + P07 + P08;
+c21 :=                  - P04 - P05 + P06 - P07       + P09;
+c22 :=  P01 + P02 + P03 + P04                               + P10;
+
+Simplify(c11 - (a11*b11 + a12*b21 + a13*b31));
+Simplify(c12 - (a11*b12 + a12*b22 + a13*b32));
+Simplify(c21 - (a21*b11 + a22*b21 + a23*b31));
+Simplify(c22 - (a21*b12 + a22*b22 + a23*b32));
+
+# Algorithm verified OK! Fulfills all 144 Brent's equations
+
+#
+# End of 2x3x2_11 solution file s2x3x2_11.z3.yacas.txt
+#
+

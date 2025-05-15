@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "akBrentUp", "akBrentUp.pyproj", "{186462BE-C1B5-4B97-9B30-4D4C1D232BFF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{186462BE-C1B5-4B97-9B30-4D4C1D232BFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{186462BE-C1B5-4B97-9B30-4D4C1D232BFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {826D4B7C-B5E0-4028-A46C-D50856CB30F2}
+	EndGlobalSection
+EndGlobal

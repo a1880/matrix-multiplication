@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartArguments>--tensorgen s4x5x6_90.z3.yacas.txt tensor.txt non</StartArguments>
+    <StartWorkingDirectory>C:\ak\pysrc\akBrentUp\4x5x6_90</StartWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartWorkingDirectory>C:\AK\TEXTE\Knowhow\MatMult\Lösungen</StartWorkingDirectory>
+    <StartArguments>--graph</StartArguments>
+  </PropertyGroup>
+</Project>

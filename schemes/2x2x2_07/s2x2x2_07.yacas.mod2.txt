@@ -1,0 +1,31 @@
+#
+# Yacas script 's2x2x2_07.yacas.txt' created 27-Apr-2025 17:46:12
+#
+# Matrix multiplication method (mod 2!) for 2x2x2_7
+#
+# Intermediate products: 7
+#
+P1 := (a21 + a22) * b22;
+P2 := (a11 + a12) * b11;
+P3 := (a12 + a21) * (b11 + b22);
+P4 := (a11 + a21) * (b11 + b12);
+P5 := a12 * (b11 + b21);
+P6 := a21 * (b12 + b22);
+P7 := (a12 + a22) * (b21 + b22);
+
+c11 :=      P2           + P5;
+c12 :=      P2 + P3 + P4      + P6;
+c21 := P1      + P3      + P5      + P7;
+c22 := P1                     + P6;
+
+
+# Brent equation statistics about non-zero triples:
+# in odd equations  [1]
+# in even equations [0, 2]
+# in kernel columns [1, 2]
+
+# Algorithm properly fulfills all Brent Equations mod 2
+
+#
+# End of 2x2x2_7 solution file 's2x2x2_07.yacas.txt'
+#

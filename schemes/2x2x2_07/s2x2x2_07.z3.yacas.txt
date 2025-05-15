@@ -1,0 +1,47 @@
+#
+# Yacas script s2x2x2_07.z3.yacas.txt created 27-Apr-2025 21:42:30
+#
+# Matrix multiplication method for 2x2x2_07
+#
+# Intermediate products: 7
+#
+# Debug mode! DebugLevel 3
+# Solver: Z3 4.14.1.0
+# Parallel threads: 1
+#
+# Solution time: Elapsed 6ms
+#
+# Minus signs reduced by literal sign flipping: 15
+#
+P1 := (a21 + a22) * b22;
+P2 := (a11 + a12) * b11;
+P3 := (a12 + a21) * (b11 - b22);
+P4 := ( - a11 + a21) * (b11 - b12);
+P5 := a12 * ( - b11 + b21);
+P6 := a21 * (b12 - b22);
+P7 := ( - a12 + a22) * (b21 - b22);
+
+c11 :=        P2           + P5;
+c12 :=        P2 - P3 + P4      + P6;
+c21 :=   P1      + P3      + P5      + P7;
+c22 :=   P1                     + P6;
+
+# Operations statistics
+# =====================
+# add operation                x13
+# multiply by -1 operation     x3
+# subtract operation           x5
+# 
+
+Simplify(c11 - (a11*b11 + a12*b21));
+Simplify(c12 - (a11*b12 + a12*b22));
+Simplify(c21 - (a21*b11 + a22*b21));
+Simplify(c22 - (a21*b12 + a22*b22));
+
+# Test multiplication was correct. OK!
+# Algorithm verified OK! Fulfills all 64 Brent's equations
+
+#
+# End of 2x2x2_07 solution file s2x2x2_07.z3.yacas.txt
+#
+

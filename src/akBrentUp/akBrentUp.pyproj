@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{186462be-c1b5-4b97-9b30-4d4c1d232bff}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>akBrentUp.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>Global|PythonCore|3.13</InterpreterId>
+    <CommandLineArguments>test</CommandLineArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="akMiniZincSolver.mzn.txt" />
+    <Content Include="akMiniZincSolver.sol.txt" />
+    <Content Include="akSmtSolver.smt2.txt" />
+    <Content Include="akSmtSolver.sol.txt" />
+    <Content Include="MiniZinc.help.txt" />
+    <Content Include="s2x1x2_04\s2x1x2_04.bini.mod2.txt" />
+    <Content Include="s2x1x2_04\s2x1x2_04.Brent.mod2.txt" />
+    <Content Include="s2x1x2_04\s2x1x2_04.minizinc.yacas.txt" />
+    <Content Include="s2x1x2_04\s2x1x2_04.minizinc_chuffed.yacas.txt" />
+    <Content Include="s2x1x2_04\s2x1x2_04.minizinc_gecode.yacas.txt" />
+    <Content Include="s2x1x2_04\s2x1x2_04.z3.yacas.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.bini.mod2.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.brent.mod2.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.brent.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.minizinc.yacas.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.yacas.mod2.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.yacas.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.yices.yacas.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_07.z3.yacas.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_7.brent.mod2.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_7.brent.txt" />
+    <Content Include="s2x2x2_07\s2x2x2_7.new.txt" />
+    <Content Include="s2x3x2_11\s2x3x2_11.bini.mod2.txt" />
+    <Content Include="s2x3x2_11\s2x3x2_11.minizinc.yacas.txt" />
+    <Content Include="s2x3x2_11\s2x3x2_11.minizinc_chuffed.yacas.txt" />
+    <Content Include="s2x3x2_11\s2x3x2_11.z3.yacas.txt" />
+    <Content Include="s4x4x4_47\s4x4x4_47.Fawzi.bini.mod2.txt" />
+    <Content Include="s5x5x5_93\s5x5x5_93.bini.mod2.txt" />
+    <Content Include="s5x5x5_93\s5x5x5_93.minizinc.yacas.txt" />
+    <Content Include="s5x5x5_93\s5x5x5_93.minizinc_chuffed.yacas.txt" />
+    <Content Include="s5x5x5_93\s5x5x5_93.yices.yacas.txt" />
+    <Content Include="s5x5x5_93\s5x5x5_93.z3.yacas.txt" />
+    <Content Include="s6x6x6_153\s6x6x6_153.bini.mod2.txt" />
+    <Content Include="s6x6x6_153\s6x6x6_153.minizinc.yacas.txt" />
+    <Content Include="s6x6x6_153\s6x6x6_153.minizinc_chuffed.yacas.txt" />
+    <Content Include="s6x6x6_153\s6x6x6_153.yices.yacas.txt" />
+    <Content Include="s6x6x6_153\s6x6x6_153.z3.yacas.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="akBrentUp.py" />
+    <Compile Include="akMiniZincSolver.py" />
+    <Compile Include="akSatSolver.py" />
+    <Compile Include="akSmtSolver.py" />
+    <Compile Include="BiniScheme.py" />
+    <Compile Include="config.py" />
+    <Compile Include="Events.py" />
+    <Compile Include="GroebnerLifter.py" />
+    <Compile Include="HenselLifter.py" />
+    <Compile Include="MatMultDim.py" />
+    <Compile Include="PrimeNumbers.py" />
+    <Compile Include="SignFlipper.py" />
+    <Compile Include="util.py" />
+    <Compile Include="yacas.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="s4x4x4_47\" />
+    <Folder Include="s5x5x5_93\" />
+    <Folder Include="s2x3x2_11\" />
+    <Folder Include="s2x2x2_07\" />
+    <Folder Include="s2x1x2_04\" />
+    <Folder Include="s6x6x6_153\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
