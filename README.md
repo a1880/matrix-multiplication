@@ -9,7 +9,7 @@ schoolbook method.
 
 The solutions provided include:
 
-$N \times M \times P \_r$ stands for multiplication of an $N \times M$
+$N \times M \times P$ \_ $r$ stands for multiplication of an $N \times M$
 matrix times an $M \times P$ matrix, using $r$ elementary products.
 
 | Solution | Remarks |
@@ -32,12 +32,12 @@ Three non-published papers are provided:
 
 | Paper | Remarks |
 | ----- | ------- |
-| [Verfahren von Makarov zur Multiplikation von 5x5 Matrizen](papers/Kemper%20-%202012%20-%20Verfahren%20von%20Makarov%20zur%20Multiplikation%20von%205x5%20Matrizen.pdf)
-| 2012: Description of Makarov's solution for <5x5x5_100> (paper in German)
-| [Fast Matrix Multiplication Attempts](papers/Kemper%20-%202017%20-%20Fast%20Matrix%20Multiplication%20Attempts.pdf)
-| 2017: 13 slides 
-| [From F2 to Z Solutions for Brent Equations](papers/Kemper%20-%202025%20-%20From%20F2%20to%20Z%20Solutions%20for%20Brent%20Equations.pdf)
-| 2025: Description of the lifting method to derive a general multiplication algorithm from a modulo $2$ algorithm |
+| [Verfahren von Makarov zur Multiplikation von 5x5 Matrizen](papers/Kemper%20-%202012%20-%20Verfahren%20von%20Makarov%20zur%20Multiplikation%20von%205x5%20Matrizen.pdf) |
+2012: Description of Makarov's solution for <5x5x5_100> (paper in German) |
+| [Fast Matrix Multiplication Attempts](papers/Kemper%20-%202017%20-%20Fast%20Matrix%20Multiplication%20Attempts.pdf) |
+2017: 13 slides |
+| [From F2 to Z Solutions for Brent Equations](papers/Kemper%20-%202025%20-%20From%20F2%20to%20Z%20Solutions%20for%20Brent%20Equations.pdf) |
+2025: Description of the lifting method to derive a general multiplication algorithm from a modulo $2$ algorithm |
 
 Feedback and questions/suggestions are welcome!
 
@@ -48,12 +48,12 @@ Don't expect production quality.
 
 | Tool | Remarks |
 | ---- | ------- |
-| [akBrentUp](src/akBrentUp) 
-| Python tool to lift a matrix multiplication algorithm |
-| [akBrentWithSbr](src/akBrentWithSbr) 
-| Python tool to solve Brent Equations<br>modulo 2 with symmetry breaking |
-| [akExtractMatMultSolution](src/akExtractMatMultSolution) 
-| c# tool to convert between<br>various formats of matrix multiplication algorithms |
+| [akBrentUp](src/akBrentUp) |
+Python tool to lift a matrix multiplication algorithm |
+| [akBrentWithSbr](src/akBrentWithSbr) |
+Python tool to solve Brent Equations<br>modulo 2 with symmetry breaking |
+| [akExtractMatMultSolution](src/akExtractMatMultSolution) |
+c# tool to convert between<br>various formats of matrix multiplication algorithms |
 
 
 [1]: https://gdz.sub.uni-goettingen.de/id/PPN362160546_0013?tify=%7B%22view%22:%22info%22,%22pages%22:%5B358%5D%7D
