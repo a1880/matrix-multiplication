@@ -1,5 +1,5 @@
 #
-# Yacas script 's5x5x5_93.yacas.txt' created 15-May-2025 20:59:08
+# Yacas script 's5x5x5_93.yacas.txt' created 16-May-2025 16:18:16
 #
 # Matrix multiplication method for 5x5x5_93
 #
