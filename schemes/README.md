@@ -10,6 +10,7 @@ matrix times an $M \times P$ matrix, using $r$ elementary products.
 | -------- | ------- |
 | [2x2x2_07](2x2x2_07) | small example á la [Strassen][1] |
 | [4x4x4_47](4x4x4_47) | the [Fawzi][2] solution for Z2 |
+| [4x4x4_48](4x4x4_48) | the [DeepMind/AlphaEvolve][5] for complex coefficients Z0.5 |
 | [4x6x6_106](4x6x6_106) | solution of [Kauers+Wood][3] re-lifted |
 | [5x5x6_110](5x5x6_110) | solution of [Kauers+Wood][3] re-lifted |
 | [5x6x6_130](5x6x6_130) | solution of [Kauers+Wood][3] re-lifted |
@@ -21,7 +22,7 @@ matrix times an $M \times P$ matrix, using $r$ elementary products.
 | [5x5x7_127](5x5x7_127) | solution of [Kauers+Wood][3] re-lifted |
 | [5x6x7_150](5x6x7_150) | solution of [Kauers+Wood][3] re-lifted |
 
-lifted = modulo 2 solution was lifted to $\mathbb{Z}$ with coefficients in $\{-1, 0, +1\}$
+lifted = modulo $2$ solution was lifted to $\mathbb{Z}$ with coefficients in $\left\{-1, 0, +1\right\}$
 
 re-lifted = general solution was lowered to F2 and then lifted to $\mathbb{Z}$
 
