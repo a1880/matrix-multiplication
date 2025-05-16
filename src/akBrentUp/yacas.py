@@ -347,7 +347,7 @@ def verify_solution(solution, dim):
                     d = solution.get(literal("c", p, q, product), 0)
                     eq_sum += f * g * d
 
-                if delta == (eq_sum % 2):
+                if delta == eq_sum:
                     cnt_ok += 1
                 else:
                     cnt_err += 1
