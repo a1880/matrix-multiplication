@@ -479,8 +479,8 @@ namespace akExtractMatMultSolution
                 o($"Bini {aRows} {aCols} {bCols} {noOfProducts}");
                 o("");
                 s = "product " +
-                    "Gamma".PadRight(cRows * cCols * 3 + 2, ' ') +
-                    "Alpha".PadRight(aRows * aCols * 3 + 2, ' ') +
+                    "Gamma".PadRight(cRows * cCols * 3 + 1, ' ') + " " +
+                    "Alpha".PadRight(aRows * aCols * 3 + 1, ' ') + " " +
                     "Beta";
                 o(s);
 
