@@ -1,10 +1,4 @@
 
-# akExtractMatMultSolution  -  Recover or Convert Matrix Multiplication Solution
-
-Call with "--help" to get the usage instructions.
-
-```
-
 akExtractMatMultSolution  -  Recover or Convert Matrix Multiplication Solution
 ------------------------------------------------------------------------------
 Compiled: 17.05.2025
@@ -88,5 +82,6 @@ Strive to eliminate common subexpressions from sums in algorithm.
 
 Note: use empty string "" or "none" to suppress output of brent_eqations_file
 
-```
+
+ciao!
 
