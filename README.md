@@ -11,21 +11,21 @@ The solutions provided include:
 $N \times M \times P$ \_ $r$ stands for multiplication of an $N \times M$
 matrix times an $M \times P$ matrix, using $r$ elementary products.
 
-| Solution  | Remarks                                                                    |
-| --------- | -------------------------------------------------------------------------- |
-| 2x2x2_07  | small example á la [Strassen][1]                                           |
-| 4x4x4_47  | the [Fawzi][2] solution for Z<sub>2</sub>                                  |
-| 4x4x4_48  | the [DeepMind/AlphaEvolve][5] for complex coefficients in Z<sub>C0.5</sub> |
-| 4x6x6_106 | solution of [Kauers+Wood][3] re-lifted                                     |
-| 5x5x6_110 | solution of [Kauers+Wood][3] re-lifted                                     |
-| 5x6x6_130 | solution of [Kauers+Wood][3] re-lifted                                     |
-| 6x6x6_153 | solution of [Moosbauer+Poole][4] re-lifted                                 |
-| 2x3x2_11  | small example                                                              |
-| 4x5x6_90  | solution of [Kauers+Wood][3] re-lifted                                     |
-| 5x5x5_93  | solution of [Moosbauer+Poole][4] re-lifted                                 |
-| 5x5x5_93  | solution of [DeepMind2025][5]                                              |
-| 5x5x7_127 | solution of [Kauers+Wood][3] re-lifted                                     |
-| 5x6x7_150 | solution of [Kauers+Wood][3] re-lifted                                     |
+| Solution  | Remarks                                                                       |
+| --------- | ----------------------------------------------------------------------------- |
+| 2x2x2_07  | small example á la [Strassen][1]                                              |
+| 2x3x2_11  | small example                                                                 |
+| 4x4x4_47  | the [Fawzi][2] solution for $\mathbb{Z_2}$                                    |
+| 4x4x4_48  | the [DeepMind/AlphaEvolve][5] for complex coefficients in $\mathbb{Z}_{C0.5}$ |
+| 4x5x6_90  | solution of [Kauers+Wood][3] re-lifted                                        |
+| 5x5x5_93  | solution of [Moosbauer+Poole][4] re-lifted                                    |
+| 5x5x5_93  | solution of [DeepMind2025][5]                                                 |
+| 4x6x6_106 | solution of [Kauers+Wood][3] re-lifted                                        |
+| 5x5x6_110 | solution of [Kauers+Wood][3] re-lifted                                        |
+| 5x5x7_127 | solution of [Kauers+Wood][3] re-lifted                                        |
+| 5x6x6_130 | solution of [Kauers+Wood][3] re-lifted                                        |
+| 5x6x7_150 | solution of [Kauers+Wood][3] re-lifted                                        |
+| 6x6x6_153 | solution of [Moosbauer+Poole][4] re-lifted                                    |
 
 ## Papers
 
