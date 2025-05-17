@@ -1,5 +1,5 @@
 #
-# Yacas script 's5x5x5_93.yacas.txt' created 16-May-2025 16:18:16
+# Yacas script 's5x5x5_93.new.txt' created 17-May-2025 14:31:30
 #
 # Matrix multiplication method for 5x5x5_93
 #
@@ -125,6 +125,33 @@ c53 :=         P02                         - P07                               +
 c54 :=                                                                               - P14       - P16       + P18       - P20                                                       - P30 + P31 + P32                                                                                                                                           + P56                                                                   + P68                                           - P76 + P77                         - P82                   + P86       - P88;
 c55 :=                     P04       - P06 + P07       - P09             + P12 - P13                         - P18       + P20                         + P25                   + P29                         - P34 + P35                                                             - P46 + P47       - P49                               - P55                                                             + P66 - P67                         - P72                                     + P79 - P80       + P82       + P84 + P85             + P88                   + P92;
 
+# Solution statistics:
+# ====================
+#
+#                        [a]        [b]        [c]      total
+# --------------------------------------------------------------
+# operands                353        350        354      1,057
+# + operands              135        128        126        389
+# - operands              125        129        135        389
+# term length         1 .. 13    1 .. 13    1 .. 13    1 .. 13
+# terms with 1 op          16         16         16         48
+
+#
+# Non-zero triples (= products of three coefficients != 0)
+# ----------------------------------------------------------
+# (equations are 'odd' for (a_row == c_row) && (a_col == b_row) && (b_col == c_col))
+#
+# Total number of equations      15,625
+# Odd triples per equation       1
+# Odd equations                  125
+# Odd equations with 1 triple    125
+# Even triples per equation      0, 2, 4, 6
+# Even equations                 15,500
+# Even equations with 0 triples  14,119
+# Odd triples per product        1, 2
+# Even triples per product       0 .. 88
+# Products with 1 odd triple     61
+#
 Simplify(c11 - (a11*b11 + a12*b21 + a13*b31 + a14*b41 + a15*b51));
 Simplify(c12 - (a11*b12 + a12*b22 + a13*b32 + a14*b42 + a15*b52));
 Simplify(c13 - (a11*b13 + a12*b23 + a13*b33 + a14*b43 + a15*b53));
@@ -159,5 +186,5 @@ Simplify(c55 - (a51*b15 + a52*b25 + a53*b35 + a54*b45 + a55*b55));
 # Algorithm properly fulfills all Brent Equations
 
 #
-# End of 5x5x5_93 solution file 's5x5x5_93.yacas.txt'
+# End of 5x5x5_93 solution file 's5x5x5_93.new.txt'
 #

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading;
 using static akExtractMatMultSolution.MatrixDimensions;
@@ -61,6 +62,7 @@ namespace akExtractMatMultSolution
             "",
             "akExtractMatMultSolution --yacas yacas_solution_file [unified_yacas_script_output_file [brent_equations_file]]",
             "Unify a Yacas algorithm to adjust syntax and layout.",
+            "Show statistics of the algorithm",
             "",
             "or",
             "",
@@ -540,15 +542,14 @@ namespace akExtractMatMultSolution
                     string s = "";
                     string sep = "";
 
-                    for (int fgd = 0; fgd < matrixName.Length; fgd++)
+                    foreach (int fgd in Fgd_all)
                     {
                         string t;
 
                         if (literalName[fgd] == "D")
                         {
                             //  Cpq is expressed in transposed form
-                            t = GetTerm(Cols[fgd], Rows[fgd], k, litArrays[fgd], literalName[fgd], coefficientName[fgd],
-                                        transposed: true);
+                            t = GetTerm(fgd, k, transposed: true);
                         }
                         else
                         {
@@ -1714,6 +1715,8 @@ namespace akExtractMatMultSolution
 
                 o("");
 
+                WriteYacasStatistics();
+
                 WriteYacasSolutionFooter(fileName, ref bVerified);
             }
             fOut = null;
@@ -1724,13 +1727,174 @@ namespace akExtractMatMultSolution
             o("");
         }
 
+        private static void WriteYacasStatistics()
+        {
+            o("# Solution statistics:");
+            o("# ====================");
+            o("#");
+
+            int dim = Fgd_all.Length;
+            MinMax[] ops = MinMax.Array(dim);
+            MinMax[] add_ops = MinMax.Array(dim);
+            MinMax[] sub_ops = MinMax.Array(dim);
+            MinMax total_ops = new();
+            MinMax total_adds = new();
+            MinMax total_subs = new();
+            int[] term0_cnt = new int[dim];
+            int[] term1_cnt = new int[dim];
+
+            foreach (int fgd in Fgd_all)
+                foreach (int k in Products)
+                {
+                    (int k_ops, int k_adds, int k_subs) = GetTermStatistics(fgd, k);
+                    ops[fgd].Register(k_ops);
+                    add_ops[fgd].Register(k_adds);
+                    sub_ops[fgd].Register(k_subs);
+                    total_ops.Register(k_ops);
+                    total_adds.Register(k_adds);
+                    total_subs.Register(k_subs);
+                    if (k_ops == 1)
+                    {
+                        term1_cnt[fgd]++;
+                    }
+                    if (k_ops == 0)
+                    {
+                        term0_cnt[fgd]++;
+                    }
+                }
+
+            const int a = (int)Mat.F;
+            const int b = (int)Mat.G;
+            const int c = (int)Mat.D;
+
+            const int w = 10; // column width
+            o($"#                 {"[a]",w} {"[b]",w} {"[c]",w} {"total",w}");
+            o("# --------------------------------------------------------------");
+            string sa = PrettyNum(ops[a].Sum);
+            string sb = PrettyNum(ops[b].Sum);
+            string sc = PrettyNum(ops[c].Sum);
+            string st = PrettyNum(total_ops.Sum);
+            o($"# operands         {sa,w} {sb,w} {sc,w} {st,w}");
+            o($"# + operands       {add_ops[a].Sum,w} {add_ops[b].Sum,w} {add_ops[c].Sum,w} {total_adds.Sum,w}");
+            o($"# - operands       {sub_ops[a].Sum,w} {sub_ops[b].Sum,w} {sub_ops[c].Sum,w} {total_subs.Sum,w}");
+            o($"# term length      {ops[a].Range(),w} {ops[b].Range(),w} {ops[c].Range(),w} {total_ops.Range(),w}");
+            if (term0_cnt.Sum() > 0)
+            {
+                o($"# empty terms      {term0_cnt[a],w} {term0_cnt[b],w} {term0_cnt[c],w} {term0_cnt.Sum(),w}"
+                 + "  *** should not happen ***");
+            }
+            o($"# terms with 1 op  {term1_cnt[a],w} {term1_cnt[b],w} {term1_cnt[c],w} {term1_cnt.Sum(),w}");
+            o();
+
+            int[] nonZeroOddTriples = new int[noOfProducts];
+            int[] nonZeroEvenTriples = new int[noOfProducts];
+            MinMax eqOddTriples = new();
+            MinMax eqEvenTriples = new();
+            int eqOdd1_cnt = 0;
+            int eqOdd_cnt = 0;
+            int eqEven0_cnt = 0;
+            int eqEven_cnt = 0;
+            int product1_cnt = 0;
+
+            for (int ra = 1; ra <= aRows; ra++)
+                for (int ca = 1; ca <= aCols; ca++)
+                    for (int rb = 1; rb <= bRows; rb++)
+                        for (int cb = 1; cb <= bCols; cb++)
+                            for (int rc = 1; rc <= cRows; rc++)
+                                for (int cc = 1; cc <= cCols; cc++)
+                                {
+                                    bool odd = (ra == rc) && (ca == rb) && (cc == cb);
+
+                                    if (transposedMode && (rc > cc))
+                                    {
+                                        continue;
+                                    }
+
+                                    int nonZeroTriples = 0;
+
+                                    foreach (int k in Products)
+                                    {
+                                        int F = litArrayF[ra, ca, k];
+                                        int G = litArrayG[rb, cb, k];
+                                        int D = litArrayD[rc, cc, k];
+                                        int T = F * G * D;
+
+                                        if (T != 0)
+                                        {
+                                            nonZeroTriples++;
+
+                                            if (odd)
+                                            {
+                                                nonZeroOddTriples[k - 1]++;
+                                            }
+                                            else
+                                            {
+                                                nonZeroEvenTriples[k - 1]++;
+                                            }
+                                        }
+                                    }
+
+                                    if (odd)
+                                    {
+                                        eqOddTriples.Register(nonZeroTriples);
+                                        if (nonZeroTriples == 1)
+                                        {
+                                            eqOdd1_cnt++;
+                                        }
+                                        eqOdd_cnt++;
+                                    }
+                                    else
+                                    {
+                                        eqEvenTriples.Register(nonZeroTriples);
+                                        if (nonZeroTriples == 0)
+                                        {
+                                            eqEven0_cnt++;
+                                        }
+                                        eqEven_cnt++;
+                                    }
+                                }
+
+            MinMax oddTriples = new();
+            MinMax evenTriples = new();
+
+            foreach (int k in Products)
+            {
+                if (nonZeroOddTriples[k - 1] == 1)
+                {
+                    product1_cnt++;
+                }
+                oddTriples.Register(nonZeroOddTriples[k - 1]);
+                evenTriples.Register(nonZeroEvenTriples[k - 1]);
+            }
+
+            o("#");
+            o("# Non-zero triples (= products of three coefficients != 0)");
+            o("# ----------------------------------------------------------");
+            o("# (equations are 'odd' for (a_row == c_row) && (a_col == b_row) && (b_col == c_col))");
+            o("#");
+            o($"# Total number of equations      {PrettyNum(eqOdd_cnt + eqEven_cnt)}");
+            o($"# Odd triples per equation       {eqOddTriples}");
+            o($"# Odd equations                  {PrettyNum(eqOdd_cnt)}");
+            o($"# Odd equations with 1 triple    {eqOdd1_cnt}");
+            o($"# Even triples per equation      {eqEvenTriples}");
+            o($"# Even equations                 {PrettyNum(eqEven_cnt)}");
+            o($"# Even equations with 0 triples  {PrettyNum(eqEven0_cnt)}");
+            o($"# Odd triples per product        {oddTriples}");
+            o($"# Even triples per product       {evenTriples.Range()}");
+            o($"# Products with 1 odd triple     {product1_cnt}");
+            o("#");
+        }
+
         private static string GetTerm(int fgd, int product, bool transposed = false, bool autoQuote = false)
         {
-            return GetTerm(Rows[fgd], Cols[fgd], product, litArrays[fgd], literalName[fgd], coefficientName[fgd], transposed, autoQuote);
+            return GetTerm(Rows[fgd], Cols[fgd], product, litArrays[fgd], 
+                           literalName[fgd], coefficientName[fgd], 
+                           transposed, autoQuote);
         }
 
         private static string GetTerm(int rows, int cols, int product, DynArray3D<int> litArray, 
-                                      string literalName, string elementName, bool transposed = false, bool autoQuote = true)
+                                      string literalName, string elementName, 
+                                      bool transposed = false, bool autoQuote = true)
         {
             string term = "";
 
@@ -1756,16 +1920,6 @@ namespace akExtractMatMultSolution
                             term += "+ ";
                         }
 
-                        /*
-                        if (transposed)
-                        {
-                            term += $"{elementName}{col}{row} ";
-                        }
-                        else
-                        {
-                            term += $"{elementName}{row}{col} ";
-                        }
-                        */
                         term += $"{elementName}{row}{col} ";
                     }
                 }
@@ -1779,6 +1933,8 @@ namespace akExtractMatMultSolution
             return term;
         }
 
+
+
         /// <summary>
         /// Count number of non-zero elements in term
         /// </summary>
@@ -1786,8 +1942,9 @@ namespace akExtractMatMultSolution
         /// <param name="rowSet">allowed rows</param>
         /// <param name="colSet">allowed columns</param>
         /// <param name="litArray">coefficient arary</param>
+        /// <param name="transpose">access array transposed</param>
         /// <returns>number of non-zero elements</returns>
-        private static int GetTermArity(int k, int[] rowSet, int[] colSet, DynArray3D<int> litArray)
+        private static int GetTermArity(int k, int[] rowSet, int[] colSet, DynArray3D<int> litArray, bool transpose = false)
         {
             int arity = 0;
 
@@ -1899,7 +2056,7 @@ namespace akExtractMatMultSolution
             }
 
             o("# Brent equation statistics about non-zero triples:");
-            oddMinMax.Show( "# in odd equations ");
+            oddMinMax.Show("# in odd equations ");
             evenMinMax.Show("# in even equations");
             colMinMax.Show("# in kernel columns");
             o("");
@@ -2084,7 +2241,7 @@ namespace akExtractMatMultSolution
 
                     List<string>[] lines = new List<string>[3];
 
-                    for (int fgd = 0; fgd < matrixName.Length; fgd++)
+                    foreach (int fgd in Fgd_all)
                     {
                         List<string> ll = [];
                         lines[fgd] = ll;
@@ -2116,7 +2273,7 @@ namespace akExtractMatMultSolution
                     for (int row = 0; line != ""; row++)
                     {
                         line = "";
-                        for (int fgd = 0; fgd < matrixName.Length; fgd++)
+                        foreach (int fgd in Fgd_all)
                         {
                             if (lines[fgd].Count > row)
                             {
@@ -2154,6 +2311,8 @@ namespace akExtractMatMultSolution
             {
                 return;
             }
+
+            Check(!transposedMode, "--reduce not implemented for transpose mode");
 
             reducedSignature = (args.Length > 2) ? args[2] : $"{aRows - 1}x{aCols - 1}x{bCols - 1}";
 
@@ -2201,12 +2360,13 @@ namespace akExtractMatMultSolution
                         int mults = 0;
                         int adds = 0;
                         HashSet<int> selectedProducts = [];
+                        bool transpose = false;
 
                         foreach (int k in Products)
                         {
-                            int aElements = GetTermArity(k, selectedARows, selectedACols, litArrayF);
-                            int bElements = GetTermArity(k, selectedACols, selectedBCols, litArrayG);
-                            int cElements = GetTermArity(k, selectedARows, selectedBCols, litArrayD);
+                            int aElements = GetTermArity(k, selectedARows, selectedACols, litArrayF, transpose);
+                            int bElements = GetTermArity(k, selectedACols, selectedBCols, litArrayG, transpose);
+                            int cElements = GetTermArity(k, selectedARows, selectedBCols, litArrayD, transpose);
 
                             //  a product is used unless A term or B term vanish,
                             //  or the product actually does not actually occur in any C element sum
@@ -2713,7 +2873,7 @@ namespace akExtractMatMultSolution
                 o("# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm"));
                 o("");
 
-                for (int fgd = 0; fgd < matrixName.Length; fgd++)
+                foreach (int fgd in Fgd_all)
                     for (int row = 1; row <= Rows[fgd]; row++)
                         for (int col = 1; col <= Cols[fgd]; col++)
                             foreach (int k in Products)

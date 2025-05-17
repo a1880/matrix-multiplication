@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
-using static akExtractMatMultSolution.MatrixDimensions;
 using static akExtractMatMultSolution.Util;
 
 namespace akExtractMatMultSolution
@@ -19,10 +17,12 @@ namespace akExtractMatMultSolution
 
         public static int[] Products = null;
 
+        public static int[] Fgd_all = null;
+
         public enum Mat { F = 0, G = 1, D = 2, unknown = 999 };
 
         public static readonly string[] literalName = ["F", "G", "D"];
-        public static readonly string[] matrixName = ["A", "B", "C"];
+        public static readonly string[] matrixNames = ["A", "B", "C"];
         public static readonly string[] coefficientName = ["a", "b", "c"];
 
         public static int[] Rows;
@@ -74,6 +74,52 @@ namespace akExtractMatMultSolution
 
             return (plus, minus);
         }
+
+
+        public static (int ops, int add_ops, int sub_ops)
+            GetTermStatistics(int fgd, int product)
+        {
+            bool transpose = (fgd == (int)Mat.D) && transposedMode;
+            return GetTermStatistics(Rows[fgd], Cols[fgd], product, litArrays[fgd], transpose);
+        }
+
+        public static (int ops, int add_ops, int sub_ops)
+            GetTermStatistics(int rows, int cols, int product, DynArray3D<int> litArray, bool transpose)
+        {
+            int ops = 0;
+            int add_ops = 0;
+            int sub_ops = 0;
+
+            bool first = true;
+            for (int row = 1; row <= rows; row++)
+                for (int col = 1; col <= cols; col++)
+                {
+                    int val = transpose ? litArray[col, row, product] : litArray[row, col, product];
+
+                    if (val != 0)
+                    {
+                        ops++;
+                        if (!first)
+                        {
+                            if (val < 0)
+                            {
+                                sub_ops++;
+                            }
+                            else
+                            {
+                                add_ops++;
+                            }
+                        }
+                        else
+                        {
+                            first = false;
+                        }
+                    }
+                }
+
+            return (ops: ops, add_ops: add_ops, sub_ops: sub_ops);
+        }
+
 
         /// <summary>
         /// Go through all three LiteralArrays
@@ -185,8 +231,11 @@ namespace akExtractMatMultSolution
                                     min = lit;
                                 }
 
-                                bInLowerHalf = bInLowerHalf
-                                            || ((ri == Rows.Length - 1) && (Math.Abs(lit) <= 1) && (row > col));
+                                if (ri == (int)Mat.D)
+                                {
+                                    bInLowerHalf = bInLowerHalf
+                                                   || ((Math.Abs(lit) <= 1) && (row > col));
+                                }
                             }
                             catch (Exception)
                             {
@@ -194,7 +243,7 @@ namespace akExtractMatMultSolution
                             }
                         }
 
-            transposedMode = !bInLowerHalf;
+            transposedMode = !bInLowerHalf && (Rows[(int)Mat.D] == Cols[(int)Mat.D]);
             algorithmMode = (min < 0) ? AlgorithmMode.FullBrent : AlgorithmMode.Mod2Brent;
         }
 
@@ -207,6 +256,7 @@ namespace akExtractMatMultSolution
             Check(noOfProducts > 0, "No products. Probably empty solution file?");
 
             Products = Range(1, noOfProducts);
+            Fgd_all = Range(0, matrixNames.Length);
 
             bRows = litArrayG.GetLength(0) - 1;
             bCols = litArrayG.GetLength(1) - 1;

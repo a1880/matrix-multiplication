@@ -147,6 +147,24 @@ namespace akExtractMatMultSolution
         }
 
         /// <summary>
+        /// Return number n with thousands separator(s)
+        /// </summary>
+        public static string PrettyNum(long n)
+        {
+            if (n < 0)
+            {
+                return $"-{PrettyNum(-n)}";
+            }
+
+            if (n < 1000)
+            {
+                return $"{n}";
+            }
+
+            return $"{PrettyNum(n / 1000)},{(n % 1000).ToString().PadLeft(3, '0')}";
+        }
+
+        /// <summary>
         /// Return int array [start, start+1, ... start+count-1]
         /// </summary>
         public static int[] Range(int start, int count)
