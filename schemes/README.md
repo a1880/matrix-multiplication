@@ -21,7 +21,7 @@ matrix times an $M \times P$ matrix, using $r$ elementary products.
 | [5x5x7_127](5x5x7_127) | solution of [Kauers+Wood][3] re-lifted                                     |
 | [5x6x7_150](5x6x7_150) | solution of [Kauers+Wood][3] re-lifted                                     |
 
-lifted = modulo $2$ solution was lifted to $\mathbb{Z}$ with coefficients in $\{-1, 0, +1\}$
+lifted = modulo $2$ solution was lifted to $\mathbb{Z}$ with coefficients in $\lbrace -1, 0, +1 \rbrace$
 
 re-lifted = general solution was lowered to F<sub>2</sub> and then lifted to $\mathbb{Z}$
 
