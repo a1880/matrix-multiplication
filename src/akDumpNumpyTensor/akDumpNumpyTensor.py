@@ -9,7 +9,9 @@ Axel Kemper  16-May-2025
 """
 from ast import Tuple
 import datetime
+from dis import pretty_flags
 import math
+from pprint import PrettyPrinter
 import numpy as np
 
 # Source:
@@ -1067,6 +1069,33 @@ def get_complex_term(name: str, a: np.array,
     return f"({s})"
 
 
+def get_complex_term_mod2(name: str, a: np.array, 
+             rows: int, cols: int, product: int) -> str:
+    s = ""    
+    idx = 0
+    eps = 0.00001
+
+    assert a.dtype == np.complex64, "oops!"
+
+    for row in range(rows):
+        for col in range(cols):
+            v = a[idx, product]
+
+            if abs(v) > eps:
+                lit = literal(name, row, col)
+                v = 1
+                if s == "":
+                    s = f"{lit}"
+                else:
+                    s += f" + {lit}"
+            idx += 1
+
+    if s == "":
+        return "(verbatim: " + get_complex_term_verbatim(name, a, rows, cols, product) + ")"
+
+    return f"({s})"
+
+
 def get_term(name: str, a: np.array, 
              rows: int, cols: int, product: int) -> str:
     s = ""    
@@ -1097,6 +1126,30 @@ def get_term(name: str, a: np.array,
                     s += f" - {lit}"
                 else:
                     assert False, f"Strange value! {v}"
+            idx += 1
+
+    return f"({s})"
+
+
+def get_term_mod2(name: str, a: np.array, 
+             rows: int, cols: int, product: int) -> str:
+    s = ""    
+    idx = 0
+
+    if a.dtype == np.complex64:
+        return get_complex_term_mod2(name, a, rows, cols, product)
+
+    for row in range(rows):
+        for col in range(cols):
+            v = a[idx, product]
+
+            if v != 0:
+                v = 1
+                lit = literal(name, row, col)
+                if s == "":
+                    s = lit
+                else: 
+                    s += f" + {lit}"
             idx += 1
 
     return f"({s})"
@@ -1156,6 +1209,14 @@ def o(s: str = ""):
     print(s)
 
 
+def pretty_3_num(i):
+    if i < 0:
+        return f"-{pretty_3_num(-i)}"
+    if i < 1000:
+        return str(i)
+    return f"{pretty_3_num(i % 1000)},{str(i % 1000).zfill(3)}"
+
+
 def transpose_array(a: np.array, rows: int, cols: int, products: int) -> None:
     for row in range(rows):
         for col in range(cols):
@@ -1189,13 +1250,61 @@ def validate_algorithm(ra: int, a_cols: int,
             for ic in range(rc):
                 c_row = ic // c_cols
                 c_col = ic % c_cols
+                """ tranposed index for [c] """
+                ict = c_col * c_cols + c_row
                 sum = 0
                 for k in range(products):
-                    sum += a[ia, k] * b[ib, k] * c[ic, k]
+                    p = a[ia, k] * b[ib, k] * c[ict, k]
+                    sum += p
                 odd = 1 if (a_row == c_row) and (a_col == b_row) and (b_col == c_col) else 0
                 if odd != sum:
                     err_cnt += 1
                     o(f"Equation {eqn}: sum {sum} != {odd}")
+                else:
+                    ok_cnt += 1
+                eqn += 1
+
+    return err_cnt, ok_cnt
+
+
+def validate_algorithm_mod2(ra: int, a_cols: int, 
+                       rb: int, b_cols: int, 
+                       rc: int, c_cols: int, 
+                       products: int, 
+                       a: np.array, 
+                       b: np.array, 
+                       c: np.array):
+    """ check if Brent Equations are fulfilled """
+    err_cnt = 0
+    ok_cnt = 0
+    eqn = 0
+    eps = 0.001
+    for ia in range(ra):
+        a_row = ia // a_cols
+        a_col = ia % a_cols
+        for ib in range(rb):
+            b_row = ib // b_cols
+            b_col = ib % b_cols
+            for ic in range(rc):
+                c_row = ic // c_cols
+                c_col = ic % c_cols
+                """ tranposed index for [c] """
+                ict = c_col * c_cols + c_row
+                sum = 0
+                s = f"{a_row+1}{a_col+1}{b_row+1}{b_col+1}{c_col+1}{c_row+1}: "
+                for k in range(products):
+                    f = a[ia, k]
+                    g = b[ib, k]
+                    d = c[ict, k]
+                    p = f * g * d
+                    if abs(p) > 0:
+                        sum += 1
+                        s += f" + {p}"
+                odd = 1 if (a_row == c_row) and (a_col == b_row) and (b_col == c_col) else 0
+                if odd != (sum % 2):
+                    err_cnt += 1
+                    o(f"Equation {eqn}: sum {sum} % 2 != {odd}")
+                    o(s)
                 else:
                     ok_cnt += 1
                 eqn += 1
@@ -1239,10 +1348,10 @@ def write_tensor_file(ra: int, a_cols: int,
         if err_cnt != 0:
             comment()
             comment("Error(s) detected:")
-            comment(f"Unfulfilled Brent Equations: {err_cnt}")
+            comment(f"Unfulfilled Brent Equations: {pretty_3_num(err_cnt)}")
         else:
             comment("Algorithm is valid!")
-        comment(f"Fulfilled Brent Equations: {ok_cnt}")
+        comment(f"Fulfilled Brent Equations: {pretty_3_num(ok_cnt)}")
         comment()
         w()
 
@@ -1258,11 +1367,59 @@ def write_tensor_file(ra: int, a_cols: int,
         w()
 
 
+def write_tensor_file_mod2(ra: int, a_cols: int, 
+                      rb: int, b_cols: int, 
+                      rc: int, c_cols: int,
+                      products: int, transpose_c: bool,
+                      a: np.array, b: np.array, c: np.array,
+                      err_cnt: int, ok_cnt: int) -> None:    
+    global wrf   #  output file for w() and comment()
+
+    a_rows = ra // a_cols
+    b_rows = rb // b_cols
+    c_rows = rc // c_cols
+    file_name = f"s{a_rows}x{a_cols}x{b_cols}_{products}.tensor.mod2.txt"
+    with open(file_name, "wt", encoding="ascii") as f:
+        wrf = f
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        comment(f"Matrix multiplication scheme in tensor form: '{file_name}'")
+        comment()
+        comment(f"Created: {now}")
+        comment("Modus: modulo 2")
+        comment()
+        if transpose_c:
+            comment("[c] is processed in transposed form")
+        else:
+            comment("[c] is processed in original order, no transposition")
+        if a.dtype == np.complex64:
+            comment("Coefficients are complex numbers")
+        if err_cnt != 0:
+            comment()
+            comment("Error(s) detected:")
+            comment(f"Unfulfilled Brent Equations: {pretty_3_num(err_cnt)}")
+        else:
+            comment("Algorithm is valid!")
+        comment(f"Fulfilled Brent Equations: {pretty_3_num(ok_cnt)}")
+        comment()
+        w()
+
+        for product in range(products):
+            ta = get_term_mod2("a", a, a_rows, a_cols, product)
+            tb = get_term_mod2("b", b, b_rows, b_cols, product)
+            tc = get_term_mod2("c", c, c_rows, c_cols, product)
+            o(f"{product+1}:")
+            w(f"{ta}*{tb}*{tc}")
+
+        w()
+        comment(f"end of file '{file_name}', lines: {wrf_line_count + 2}")
+        w()
+
+
 def main():
     global wrf
     transpose_c = True
-    # sh: Tuple = decomposition_444
-    sh: Tuple = decomposition_555
+    sh: Tuple = decomposition_444
+    # sh: Tuple = decomposition_555
 
     """ derive problem dimensions from data shape """
     a, ra, a_cols, \
@@ -1279,6 +1436,21 @@ def main():
                            a, b, c)
 
     write_tensor_file(ra, a_cols,
+                      rb, b_cols,
+                      rc, c_cols,
+                      products,
+                      transpose_c,
+                      a, b, c,
+                      err_cnt, ok_cnt)
+
+    err_cnt, ok_cnt = \
+        validate_algorithm_mod2(ra, a_cols, 
+                           rb, b_cols, 
+                           rc, c_cols, 
+                           products, 
+                           a, b, c)
+
+    write_tensor_file_mod2(ra, a_cols,
                       rb, b_cols,
                       rc, c_cols,
                       products,

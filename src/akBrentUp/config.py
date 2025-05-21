@@ -1,7 +1,6 @@
 import os
 import argparse
-import time
-from util import get_seconds_since_midnight, set_debug_level, str2bool
+from util import finish, get_seconds_since_midnight, set_debug_level, str2bool
 
 class Config:
     def __init__(self):
@@ -28,7 +27,8 @@ class Config:
             help="seed for random numbers [-1 = clock, default: 0]",
         )
         parser.add_argument(
-            "-t", "--threads", type=int, default=os.cpu_count(), help=f"number of parallel threads [default: {os.cpu_count()}]"
+            "-t", "--threads", type=int, default=os.cpu_count(), 
+            help=f"number of parallel threads [default: {os.cpu_count()}]"
         )
         parser.add_argument(
             "-T",
@@ -48,20 +48,25 @@ class Config:
         parser.add_argument("--akbc", type=str2bool, nargs='?',
                             const=True, default=True,
                             help="Translate assertions via akBool2cnf")
-        bini_default = "s2x1x2_04.bini.mod2.txt"
-        # bini_default = "s5x5x5_93.bini.mod2.txt"
-        # bini_default = "s2x2x2_07.bini.mod2.txt"
-        # bini_default = "s6x6x6_153.bini.mod2.txt"
-        # bini_default = "s2x3x2_11.bini.mod2.txt"
-        # bini_default = "s4x4x4_47.Fawzi.bini.mod2.txt"
+        bini_default = "s2x2x2_07.bini.mod2.txt"
         parser.add_argument(
             "bini",
             nargs='?',  # optional
             default=bini_default,
             help=f"matrix multiplication problem in Bini form [default: {bini_default}]",
         )
-        self.args = parser.parse_args()
+        try:
+            self.args = parser.parse_args()
+        except:
+            self.fatal(f"Could not process command-line. Use '--help' to get help")
+
         set_debug_level(self.debugLevel)
+
+    def fatal(self, msg: str) -> None:
+        print()
+        print(f"Cannot start program: {msg}")
+        print()
+        finish(1)
 
     @property
     def akbc(self) -> bool:

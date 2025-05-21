@@ -15,7 +15,7 @@ usage: python -OO akBrentup.py [options] bini_scheme_file
 find matrix multiplication algorithm
 
 positional arguments:
-  bini                  matrix multiplication problem in Bini form [default: s6x6x6_153.bini.mod2.txt]
+  bini                  matrix multiplication problem in Bini form [default: s2x2x2_07.bini.mod2.txt]
 
 options:
   -h, --help            show this help message and exit
@@ -84,11 +84,21 @@ ref_counts: dict[str, int] = {}
 dyads: dict[str, z3.BoolRef] = {}
 
 def test_case() ->None:
-    test = 666
+    test = 555
     all_CPUs = str(os.cpu_count())
 
     if test == 1:
         t = ['--help']
+    elif test == 115:
+        t = ["-t", all_CPUs,
+             "-S", "z3",
+             "-vv",  #  4; default is 2
+             "1x1x5_05/s1x1x5_05.bini.mod2.txt"]
+    elif test == 1151:
+        t = ["-t", all_CPUs,
+             "--lift", "groebner",
+             "-vv",  #  4; default is 2
+             "1x1x5_05/s1x1x5_05.bini.mod2.txt"]
     elif test == 212:
         t = ["-t", "1",
              "-S", "minizinc_cp-sat",
@@ -97,6 +107,11 @@ def test_case() ->None:
     elif test == 222:
         t = ["-t", all_CPUs,
              "-S", "minizinc_cp-sat",
+             "-vv",  #  4; default is 2
+             "s2x2x2_07/s2x2x2_07.bini.mod2.txt"]
+    elif test == 2221:
+        t = ["-t", all_CPUs,
+             "--lift", "groebner",
              "-vv",  #  4; default is 2
              "s2x2x2_07/s2x2x2_07.bini.mod2.txt"]
     elif test == 456:
@@ -126,8 +141,10 @@ def test_case() ->None:
              "4x7x7_144/s4x7x7_144.bini.mod2.txt"]
     elif test == 555:
         t = ["-t", all_CPUs,
-             "-S", "z3",
-             "-v",  #  3; default is 2
+             # "-S", "z3",
+             # "-S", "minizinc_cp-sat",
+             "-S", "yices",
+             # "-v",  #  3; default is 2
              "s5x5x5_93/s5x5x5_93.bini.mod2.txt"]
     elif test == 556:
         t = ["-t", all_CPUs,
@@ -314,7 +331,7 @@ def define_constraints(solver: z3.Solver, mmDim: MatMultDim, bini: BiniScheme) -
                 odd = (a_row == c_row) and (a_col == b_row) and (b_col == c_col)
                 check((len(triples) % 2 == 1) == odd, "inconsistent triples")
                 
-                seq = f"{a_row+1}{a_col+1}{b_row+1}{b_col+1}{c_row+1}{c_col+1}"
+                seq = f"{idx(a_row, a_col)}{idx(b_row, b_col)}{idx(c_row, c_col)}"
                 if len(triples) > 0:
                     s = "odd" if odd else "even"
                     cardinality(solver, triples)
@@ -331,7 +348,7 @@ def dyad(a_row: int, a_col: int, b_row: int, b_col: int, product: int) -> z3.Boo
     """
     A "dyad" is a product of two variables.
     Here, we are using Xor() to get the product.
-    For +1/-1 variables, this calculates the resulting sign.
+    For +1/-1 variables, this calculates the resulting polarity.
     true  = +1
     false = -1
     """
@@ -384,7 +401,7 @@ def is_non_zero_triple(bini: BiniScheme,
                        c_row: int, c_col: int, 
                        product: int):
     """  use 'and'  to benefit from expression short circuiting """
-    # o(f"{a_row+1}{a_col+1}{b_row+1}{b_col+1}{c_row+1}{c_col+1}_{product+1}")
+    # o(f"{idx(a_row, a_col)}{idx(b_row, b_col)}{idx(c_row, c_col)}_{product+1}")
     return \
            (bini.a(a_row, a_col, product) != 0) and \
            (bini.b(b_row, b_col, product) != 0) and \
@@ -392,7 +409,7 @@ def is_non_zero_triple(bini: BiniScheme,
     
 
 def literal(name: str, row: int, col: int, product: int):
-    lit = f"{name}{row+1}{col+1}_{str(product+1).zfill(product_index_digits)}"
+    lit = f"{name}{idx(row, col)}_{str(product+1).zfill(product_index_digits)}"
     return lit
 
 
@@ -535,6 +552,7 @@ def validate_environment(python_home: str) -> None:
         for p in os.environ['PYTHONPATH'].split(';'):
             o(f"  {p}")
         o()
+    o()
 
 
 def Xor(a: z3.BoolRef, b: z3.BoolRef) -> z3.BoolRef:

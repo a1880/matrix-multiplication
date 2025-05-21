@@ -9,7 +9,6 @@
 import json
 import os
 import subprocess
-import time
 from util import (check, fatal, get_debug_level, o, o4,
                   load_json_line, load_json_with_trailing_commas,
                   pretty_num, timestamp, TimeReporter, wrap)

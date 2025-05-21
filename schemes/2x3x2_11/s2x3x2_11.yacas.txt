@@ -1,0 +1,41 @@
+#  akBrentZinc Yacas script file '2x3x2_11\s2x3x2_11.yacas.txt' for 2x3x2_11
+#  Created:               21-May-2025 17:28:14
+#  MiniZinc back-end:     cp-sat
+#  Number of threads:     28
+#  Solution run-time:     elapsed 1.07s   (includes pre- and post-processing)
+#  MiniZinc run-time:     elapsed 1.02s
+#  Variables in solution: 59  (= number of coefficients != 0)
+#  
+
+#
+#  Minus signs reduced by literal sign flipping: 38
+#
+
+#  Intermediate elementary products: 11
+
+P01 := (a13 + a23) * b32;
+P02 := a13 * (b21 + b31 - b32);
+P03 := (a13 - a22) * (b21 + b31);
+P04 := a22 * (- b12 + b21 - b22 + b31);
+P05 := a11 * (b11 - b12 - b22);
+P06 := (- a22 + a23) * b31;
+P07 := (a11 + a22) * (b12 + b22);
+P08 := (- a11 + a12) * b22;
+P09 := (- a11 + a21) * b11;
+P10 := (a21 - a22) * b12;
+P11 := (a12 - a13) * b21;
+
+#  Sums of intermediate products
+
+c11 := P03 + P04 + P05 + P07 + P11;
+c12 := - P02 + P03 + P04 + P07 + P08;
+c21 := P04 + P05 + P06 + P07 + P09;
+c22 := P01 + P02 - P03 - P04 + P10;
+
+#  
+#  Solution validated. OK!
+#  Equations fulfilled: 144
+#  
+
+#  End of Yacas script file '2x3x2_11\s2x3x2_11.yacas.txt' for 2x3x2_11
+

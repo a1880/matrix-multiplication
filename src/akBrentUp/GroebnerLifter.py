@@ -6,10 +6,21 @@ GroebnerLifter.py  -  module to implement lifting via Gröbner bases for solving
 from BiniScheme import BiniScheme
 from MatMultDim import MatMultDim
 import numpy as np
-import sympy as sp
-from sympy.polys.orderings import grlex, grevlex
+from SymbolicSolver import sort_polynomial_terms
 from util import fatal, o
 
+use_sympy = False
+use_symbolic_solver = True
+
+if use_sympy:
+    # import sympy as sp
+    # from sympy.polys.orderings import grlex
+    pass
+elif use_symbolic_solver:
+    import SymbolicSolver as sp
+    grlex = 'grlex'
+else:
+    fatal("inconsistent solver setup")
 
 class GroebnerLifter:
     def __init__(self, mmDim: MatMultDim, bini: BiniScheme):
@@ -27,7 +38,7 @@ class GroebnerLifter:
         
     def dyad(self, a_row: int, a_col: int, 
                    b_row: int, b_col: int, 
-                   product: int, cnt: int) -> sp.core.mul.Mul:
+                   product: int, cnt: int):  #  -> sp.core.mul.Mul:
         """
         A "dyad" is a product of two variables.
         """
@@ -43,7 +54,8 @@ class GroebnerLifter:
             val = self.G(b_row, b_col, product)
             g = self.variable("g", b_row, b_col, product, val)
             if self.use_zero_one:
-                fg = sp.expand((1-2*f) * (1-2*g))
+                # fg = sp.expand((1-2*f) * (1-2*g))
+                fg = 1 - 2*g - 2*f - 4*f*g
             else:
                 fg = f * g
             if cnt > 1:
@@ -118,7 +130,7 @@ class GroebnerLifter:
         o("Starting Groebner lifting")
         o(dim.toString)
         
-        polynomials: list = []
+        polynomials: list[sp.Poly] = []
         non_poly_cnt = 0
         """ set of d coefficients which don't require to be fixed """
         no_fix_vars: set = set()
@@ -199,13 +211,14 @@ class GroebnerLifter:
                                 sum_of_triples += fgd
                     if not first:
                         """ Triple(s) found: we have something to append """
-                        o(f"triples {sum_of_triples} {str(type(sum_of_triples))}")
+                        # o(f"triples {sum_of_triples} {str(type(sum_of_triples))}")
                         if (a_row == c_row) and (a_col == b_row) and (b_col == c_col):
+                            """ -1 first to allow constant folding """
                             expr = sum_of_triples - 1
                         else:
                             expr = sum_of_triples
                         expr = sp.simplify(expr)
-                        poly = self.Poly(expr, vars)
+                        poly: sp.Poly = self.Poly(expr, vars)
                         polynomials.append(poly)
                     else:
                         """ No non-zero triples in this equation """
@@ -220,35 +233,49 @@ class GroebnerLifter:
         o(no_fix_vars)
         o(f"fix vars {len(fix_vars)}")
         o(fix_vars)
-        
-        s = f"constraints for {len(fix_vars)} of " + \
-            f"{len(self.variables) - len(self.dyads)} variables in"
-        if self.use_zero_one:
-            o(f"Appending x² - x {s} {{0, 1}}")
-            
-            """ all variables {0, 1} have to satify x² - x == 0 """
-            polynomials += [self.Poly(v*v - v, vars) for v in fix_vars]
-        else:
-            o(f"Appending x² - 1 {s} {{-1, +1}}")
-            
-            """ all variables {-1, +1} have to satify x² - 1 == 0 """
-            polynomials += [self.Poly(v*v - 1, vars) for v in fix_vars]
-        
 
-        o(f"Appending dyad expressions: {len(self.dyads)}")
-        polynomials += [self.Poly(self.dyad_expressions[d] - self.dyads[d], vars) for d in self.dyads]
+        if not fix_vars:
+            o("No variables to be fixed to their domain")
+        else:
+            s = f"constraints for {len(fix_vars)} of " + \
+                f"{len(self.variables) - len(self.dyads)} variables in"
+            if self.use_zero_one:
+                o(f"Appending x² - x {s} {{0, 1}}")
+            
+                """ all variables {0, 1} have to satify x² - x == 0 """
+                polynomials += [self.Poly(v*v - v, vars) for v in fix_vars]
+            else:
+                o(f"Appending x² - 1 {s} {{-1, +1}}")
+            
+                """ all variables {-1, +1} have to satify x² - 1 == 0 """
+                polynomials += [self.Poly(v*v - 1, vars) for v in fix_vars]
+        
+        if not self.dyads:
+            o(f"No dyads defined")
+        else:
+            o(f"Appending dyad expressions: {len(self.dyads)}")
+            polynomials += [self.Poly(self.dyad_expressions[d] - self.dyads[d], vars) for d in self.dyads]
             
         o(f"Polynomials: {len(polynomials)}")
         pno = 0
         for poly in polynomials:
-            o(f"{pno}: {poly.as_expr()}")
+            p: sp.Poly = poly
+            o(f"{pno}: {p.as_expr()}")
             pno += 1
             
+        """
+        Ensure that variables and polynomials are sorted/ordered
+        """
+        sort_polynomial_terms(polynomials, vars)
+
         o("Computing Groebner bases")
         
         # G = sp.groebner(polynomials, vars, order=grlex)
         G = sp.groebner(polynomials, vars, method='f5b', order=grlex)
         
+        if not use_sympy:
+            fatal("NIY")
+
         o(f"Gröbner basis computed len(G)={len(G)}")
         
         show_groebner = True
@@ -320,16 +347,16 @@ class GroebnerLifter:
         o("Groebner lifting complete")
         return 0
 
-    def Poly(self, expr, vars):
+    def Poly(self, expr, vars) -> sp.Poly:
         return sp.Poly.from_expr(expr, vars, domain='ZZ')
     
-    def Symbol(self, name):
+    def Symbol(self, name) -> sp.Symbol:
         if self.use_zero_one:
             return sp.Symbol(name, integer=True, negative=False)
         else:
             return sp.Symbol(name, integer=True, nonzero=True)
     
-    def copy_lifted_solution(self, solution):
+    def copy_lifted_solution(self, solution) -> None:
         o(self.variables)
         self.lifted = self.bini.copy()
         self.lifted.mod2_mode = False
@@ -391,7 +418,7 @@ class GroebnerLifter:
             fatal("oops!")
         return best
 
-    def is_valid_Brent_solution(self, solution, sno):
+    def is_valid_Brent_solution(self, solution, sno) -> bool:
         dim = self.mmDim
         cnt_err = 0
         for a_row, a_col in dim.AIndices:
@@ -413,31 +440,6 @@ class GroebnerLifter:
     def literal(self, name: str, row: int, col: int, product: int) -> str:
         return f"{name}{row+1}{col+1}_{str(product+1).zfill(self.product_index_digits)}"
     
-    def print_array(self, arr) -> None:
-        if arr is None:
-            o("none")
-            return
-        if type(arr) is np.ndarray:
-            self.print_array(arr.tolist())
-            return
-        if not (type(arr) is list):
-            print(arr)
-            return
-        if len(arr) == 0:
-            print("empty list")
-            return
-        if not (type(arr[0]) in {list, np.ndarray}):
-            self.print_array([arr])
-            return
-        for row in arr:
-            s = ""
-            for element in row:
-                if element == 0:
-                    s = s + ".".rjust(1)
-                else:
-                    s = s + str(element).rjust(1)
-            o(s)
-            
     def variable(self, name: str, row: int, col: int, product: int, 
                  val: int) -> sp.Symbol:
         lit = self.literal(name, row, col, product)
@@ -450,6 +452,7 @@ class GroebnerLifter:
             ll = self.variables[lit]
         return ll
     
+
     def variable_value(self, name: str, row: int, col: int, product: int, solution):
         lit = self.literal(name, row, col, product)
         id = self.var_id[lit]

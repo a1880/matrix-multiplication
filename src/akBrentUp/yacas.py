@@ -309,25 +309,25 @@ def sum_of_product_values(solution, dim, row, col, products):
 
 
 def try_solution(solution, dim):
-    o4("Experimental validation of matrix multiplication algorithm")
+    o4("# Experimental validation of matrix multiplication algorithm")
     prime_iterator = PrimeNumbers(100)
-    o4(f"Create two matrices {dim.aRows}x{dim.aCols} {dim.bRows}x{dim.bCols} of prime numbers")
+    o4(f"# Create two matrices {dim.aRows}x{dim.aCols} {dim.bRows}x{dim.bCols} of prime numbers")
     a = create_prime_matrix(dim.aRows, dim.aCols, prime_iterator)
     b = create_prime_matrix(dim.bRows, dim.bCols, prime_iterator)
-    o4("Apply solution to multiply matrices")
+    o4("# Apply solution to multiply matrices")
     axb = apply_solution(a, b, solution, dim)
-    o4("Multiply the same matrices in the classic schoolbook way")
+    o4("# Multiply the same matrices in the classic schoolbook way")
     c = multiply_classic(a, b, dim)
     
-    o4("Compare resulting product matrices and count differences")
+    o4("# Compare resulting product matrices and count differences")
     cnt_err = compare_matrix_products(axb, c, dim)
     
     if cnt_err == 0:
-        o4("No differences found! Solution validated!")
+        o4("# No differences found! Solution validated!")
         o("# Test multiplication was correct. OK!")
     else:
-        o(f"Differences found: {cnt_err}")
-        o("Solution is invalid!")
+        o(f"# Differences found: {cnt_err}")
+        o("# Solution is invalid!")
         
     return cnt_err == 0
 

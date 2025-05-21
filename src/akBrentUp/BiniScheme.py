@@ -1,4 +1,5 @@
 from functools import cached_property
+import os
 from util import *
 
 # =====================================================================
@@ -250,7 +251,7 @@ class BiniScheme(object):
         s = "non-" if not self.transpose_matrix_c else ""
         o(f"Matrix Gamma is assumed to be in {s}transposed order")
 
-        check(exists(input_file_name), f"Bini scheme input file {input_file_name} not found")
+        check(exists(input_file_name), f"Bini scheme input file {os.path.realpath(input_file_name)} not found")
 
         with open(input_file_name) as input_file:
             for line in input_file:

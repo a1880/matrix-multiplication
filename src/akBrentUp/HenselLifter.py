@@ -4,10 +4,9 @@ HenselLifter.py  -  module to implement Hensel lifting for solving
 """
 
 from BiniScheme import BiniScheme
-from config import Config
 from MatMultDim import MatMultDim
 import numpy as np
-from util import fatal, o, o4
+from util import fatal, o, print_array
 
 
 class HenselLifter:
@@ -86,7 +85,7 @@ class HenselLifter:
         solutions = self.solve_homogeneous_mod2(arr)
             
         sol = self.get_best_solution(solutions)
-        self.print_array(sol)
+        print_array(sol)
 
         self.lifted = self.bini.copy()
         self.lifted.mod2_mode = False
@@ -199,7 +198,7 @@ class HenselLifter:
             for col in range(cols):
                 sum += A[row, col] * sol[col]
             if sum % 2 != 0:
-                # self.print_array([A[row, i] for i in range(cols)])
+                # print_array([A[row, i] for i in range(cols)])
                 # print(f"Invalid row {row}  sum {sum}")
                 return False
         return True
@@ -250,31 +249,6 @@ class HenselLifter:
     def literal(self, name, row, col, product):
         return f"{name}{row+1}{col+1}_{str(product+1).zfill(self.product_index_digits)}"
     
-    def print_array(self, arr):
-        if arr is None:
-            o("none")
-            return
-        if type(arr) is np.ndarray:
-            self.print_array(arr.tolist())
-            return
-        if not (type(arr) is list):
-            print(arr)
-            return
-        if len(arr) == 0:
-            print("empty list")
-            return
-        if not (type(arr[0]) in {list, np.ndarray}):
-            self.print_array([arr])
-            return
-        for row in arr:
-            s = ""
-            for element in row:
-                if element == 0:
-                    s = s + ".".rjust(1)
-                else:
-                    s = s + str(element).rjust(1)
-            o(s)
-            
     def variable(self, name, row, col, product, val):
         lit = self.literal(name, row, col, product)
         if lit not in self.variables:
