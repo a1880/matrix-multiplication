@@ -1,5 +1,5 @@
 #
-# Yacas script 's5x5x5_93.yacas.txt' created 23-May-2025 23:58:34
+# Yacas script 's5x5x5_93.yacas.check.txt' created 23-May-2025 23:58:34
 #
 # Matrix multiplication method for 5x5x5_93
 #
@@ -186,5 +186,5 @@ Simplify(c55 - (a51*b15 + a52*b25 + a53*b35 + a54*b45 + a55*b55));
 # Algorithm properly fulfills all Brent Equations
 
 #
-# End of 5x5x5_93 solution file 's5x5x5_93.yacas.txt'
+# End of 5x5x5_93 solution file 's5x5x5_93.yacas.check.txt'
 #

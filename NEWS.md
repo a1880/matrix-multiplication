@@ -1,5 +1,14 @@
-
 # Change Log
+
+## 24-May-2025 AlphaEvolve solutions
+
+Solutions were converted and analyzed with akDumpNumpyTensor
+
+akDumpNumpyTensor was extended. <br/>A MatMultTensor class was introduced to cleanup the code.
+
+Solutions validated against Brent Equations.
+
+Some of the solutions have complex, float or extended coefficient sets, <br/>not just $\lbrace -1, +1 \rbrace$
 
 ## 17-May-2025 Solution statistics
 
@@ -18,5 +27,3 @@ Improved akDumpNumpyTensor to validate algorithms and handle complex coefficient
 Repository created
 
 Added AlphaEvolve discovery of <5x5x5_93> to the paper
-
-

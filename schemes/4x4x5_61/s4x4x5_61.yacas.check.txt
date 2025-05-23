@@ -1,0 +1,148 @@
+#
+# Yacas script 's4x4x5_61.yacas.check.txt' created 23-May-2025 23:58:10
+#
+# Matrix multiplication method for 4x4x5_61
+#
+# Intermediate products: 61
+#
+P01 := (- a43 + a44) * (b13 + b15 - b43 - b45);
+P02 := (a12 + a31 + a32 + a33 + a42 + a43) * (- b23);
+P03 := (- a42 - a43) * (- b25 + b31);
+P04 := (- a32 - a34 - a41 - a44) * (b21 + b22 + b23 - b42);
+P05 := (- a21 + a22) * (b12 - b42);
+P06 := (- a11 + a12) * (b11 - b31);
+P07 := (- a12 - a14 + a22 + a23) * (- b24 + b25);
+P08 := (a11 + a13) * (b15 - b31);
+P09 := (- a22 + a31) * (b12 + b22 - b32 - b42);
+P10 := (- a22 - a32 - a34 - a41 - a42 - a44) * (- b21 - b22 - b23);
+P11 := (- a12 - a14 - a24 + a41) * (- b11 - b12 + b14 + b41 + b42);
+P12 := (- a13 - a22 - a23) * (- b14 + b34);
+P13 := (a13 - a31) * (- b13 + b33);
+P14 := a22 * (- b12 - b22 + b32 + b42);
+P15 := (a12 + a31) * (b11 - b22 - b31 + b42);
+P16 := (a31 + a33 + a42 + a43) * (b23 + b31);
+P17 := (- a11 - a13 - a14 - a34 - a41 - a44) * (- b43);
+P18 := (a13 + a22 + a23 + a32 + a33 + a34) * (b31 + b32 - b34);
+P19 := (- a12 + a34 + a41 + a44) * (b21 + b22 + b23 - b41 - b42);
+P20 := (- a12 - a14 - a42 - a43) * (- b24 + b25 + b44);
+P21 := (a22 - a43) * (- b24 + b34);
+P22 := (- a12 + a41) * (b11 + b21 - b31 - b41);
+P23 := (- a12 + a34 - a42 - a43) * (b23 + b24 - b44);
+P24 := (- a13) * (- b15 + b24 - b25 + b35 - b44 + b45);
+P25 := (- a22 - a32 - a34 + a43) * (- b23 - b24 - b31 - b32 + b34);
+P26 := (a13 + a34) * (- b13 - b15 + b24 - b25 + b33 + b35 - b44 + b45);
+P27 := (a23 - a24) * (b24 - b25 - b34 + b35);
+P28 := (a31 - a32) * (b22 - b42);
+P29 := (a12 + a14 + a21 + a24) * (b11 + b12 - b14 - b42);
+P30 := (a22 + a23) * (b24 - b25 + b31 - b34);
+P31 := (a32 + a34) * (- b24 + b25 - b31 - b32 + b34 + b42);
+P32 := (a22 + a41) * (- b12 + b21 - b31 + b42);
+P33 := (a32 + a34 - a42 - a43) * (b23 + b25);
+P34 := (- a31 - a33 + a41 + a44) * (b13 + b15);
+P35 := (a24 + a43) * (b13 + b15 - b24 + b25 + b34 - b35 - b43 - b45);
+P36 := (a31 + a33) * (b13 + b15 - b31 - b33);
+P37 := (a11 + a13 + a22 + a23) * (b14 - b31);
+P38 := a44 * (- b13 - b15 + b41 + b43);
+P39 := (- a11 - a13 + a21 + a24) * (- b14 + b15);
+P40 := (a11 + a13 + a41) * (b13 - b43);
+P41 := (a12 + a14 - a41 - a44) * (- b41);
+P42 := (- a11 - a12 - a14 - a21 - a24 - a31) * (b11 + b12 - b14);
+P43 := (- a43) * (- b13 - b15 - b25 + b35 + b43 + b45);
+P44 := (a22 - a31 - a33 - a43) * (- b23 - b31 - b32);
+P45 := (- a13 - a22 - a23 + a31) * (b14 - b31 - b32);
+P46 := (a13 - a14) * (b24 - b25 - b44 + b45);
+P47 := (- a12 - a14 - a24 - a42 - a43 - a44) * (- b44);
+P48 := (- a34 + a43) * (- b13 - b15 - b23 - b25 + b33 + b35 + b43 + b45);
+P49 := (- a21 - a23 - a24 - a31 - a33 - a43) * (b31 + b32 + b33);
+P50 := (- a41) * (b11 - b15 + b21 - b31);
+P51 := (- a13 + a21 + a24 + a31) * (- b13 - b14 + b31 + b32 + b33);
+P52 := (a13 - a24) * (- b14 + b15 - b24 + b25 + b34 - b35 + b44 - b45);
+P53 := (- a21 - a24) * (b13 + b15 - b31 - b32 - b33 + b42);
+P54 := (a41 - a42) * (- b21 + b31);
+P55 := (a11 + a13 - a24 + a41) * (b13 + b14 - b43);
+P56 := (a33 - a34) * (- b13 - b15 + b33 + b35);
+P57 := (- a11 - a13 - a21 - a22 - a23 - a41) * b14;
+P58 := (- a11 - a13 - a41 - a44) * (- b13 - b15 + b43);
+P59 := (- a12 - a42 - a43) * (b24 - b44);
+P60 := (- a31 - a33 - a43) * (b23 - b33);
+P61 := (- a11 - a13 + a42 + a43) * (- b31);
+
+c11 :=                               - P06       - P08                                                                               - P22                                                                                           + P38       - P40 - P41                                                 - P50                                           + P58;
+c12 :=                                 P06       + P08 - P09                   - P13 + P14 - P15                                                                               - P29                                                       + P39             - P42                                                 - P51       + P53;
+c13 :=                                           - P08                                           - P16 + P17                               - P23 + P24       + P26                                           - P34       - P36                                     + P43                         + P48                                                       + P58 + P59 - P60 - P61;
+c14 :=             - P03                   + P07                         - P12                                           - P20                                                       + P30                                     + P37                                                                                                                               - P59       + P61;
+c15 :=             - P03                         + P08                                                                   - P20                   - P24                                                                                                                               - P46                                                                         - P59       + P61;
+c21 :=                           P05             + P08             - P11                                                                                                       + P29             + P32                         - P37 - P38       + P40 + P41                                                 + P50                                     - P57 - P58;
+c22 :=                         - P05             - P08                         + P13 - P14                                                                                                                                     + P37       - P39                               + P45                               + P51       - P53;
+c23 :=                                                                         - P13                                                                                                                                                             - P40                   - P44 - P45                   - P49       - P51                   + P55       + P57             - P60;
+c24 :=                                                                   - P12                                                 - P21             + P24                                                             - P35                         + P40             + P43                                                 - P52             - P55       - P57;
+c25 :=                                             P08                                                                         - P21                               + P27             - P30                         - P35       - P37       + P39 + P40             + P43                                                                   - P55       - P57;
+c31 :=         P02       - P04                   + P08                                     + P15 + P16             - P19             + P22                               + P28                                                       - P38       + P40                                                       + P50                                           - P58             + P61;
+c32 :=             - P03                               + P09                         - P14       - P16                         + P21                   + P25             - P28             + P31       - P33                                                             + P44;
+c33 :=       - P02                                                             + P13                                                       + P23 - P24       - P26                                                                                                 - P43                         - P48                                                             - P59 + P60;
+c34 :=         P02                                                       + P12                               - P18             + P21       - P23       + P25                                                                                                             + P44 + P45                                                                               + P59;
+c35 :=         P02 + P03                                                       - P13             + P16                                     - P23 + P24       + P26                                     + P33             + P36                                                                                                                   + P56             + P59;
+c41 :=                                           - P08                                                                                                                                                                               + P38       - P40                                                       - P50                   + P54                   + P58             - P61;
+c42 :=               P03 + P04                               + P10                   + P14                                     - P21                   - P25                               - P31 - P32 + P33                                                                                                                         - P54;
+c43 :=                                             P08                                           + P16                                                                                                       + P34       + P36                   + P40                                                                                                       - P58       + P60 + P61;
+c44 :=               P03                   - P07                         + P12                                           + P20                   - P24                               - P30                         + P35       - P37             - P40             - P43                   + P47                         + P52             + P55                               - P61;
+c45 := - P01       + P03                         - P08                                                                                                                                                                                           - P40             - P43                                                                                     + P58             - P61;
+
+# Solution statistics:
+# ====================
+#
+#                        [a]        [b]        [c]      total
+# --------------------------------------------------------------
+# operands                193        208        196        597
+# + operands               57         74         71        202
+# - operands               75         73         64        212
+# term length          1 .. 6     1 .. 8    1 .. 11    1 .. 11
+# terms with 1 op           5          6         12         23
+
+#
+# Non-zero triples (= products of three coefficients != 0)
+# ----------------------------------------------------------
+# (equations are 'odd' for (a_row == c_row) && (a_col == b_row) && (b_col == c_col))
+#
+# Total number of equations      6,400
+# Odd triples per equation       1, 3
+# Odd equations                  80
+# Odd equations with 1 triple    78
+# Even triples per equation      0, 2, 4
+# Even equations                 6,320
+# Even equations with 0 triples  5,592
+# Odd triples per product        1, 2, 4
+# Even triples per product       5 .. 80
+# Products with 1 odd triple     42
+#
+Simplify(c11 - (a11*b11 + a12*b21 + a13*b31 + a14*b41));
+Simplify(c12 - (a11*b12 + a12*b22 + a13*b32 + a14*b42));
+Simplify(c13 - (a11*b13 + a12*b23 + a13*b33 + a14*b43));
+Simplify(c14 - (a11*b14 + a12*b24 + a13*b34 + a14*b44));
+Simplify(c15 - (a11*b15 + a12*b25 + a13*b35 + a14*b45));
+Simplify(c21 - (a21*b11 + a22*b21 + a23*b31 + a24*b41));
+Simplify(c22 - (a21*b12 + a22*b22 + a23*b32 + a24*b42));
+Simplify(c23 - (a21*b13 + a22*b23 + a23*b33 + a24*b43));
+Simplify(c24 - (a21*b14 + a22*b24 + a23*b34 + a24*b44));
+Simplify(c25 - (a21*b15 + a22*b25 + a23*b35 + a24*b45));
+Simplify(c31 - (a31*b11 + a32*b21 + a33*b31 + a34*b41));
+Simplify(c32 - (a31*b12 + a32*b22 + a33*b32 + a34*b42));
+Simplify(c33 - (a31*b13 + a32*b23 + a33*b33 + a34*b43));
+Simplify(c34 - (a31*b14 + a32*b24 + a33*b34 + a34*b44));
+Simplify(c35 - (a31*b15 + a32*b25 + a33*b35 + a34*b45));
+Simplify(c41 - (a41*b11 + a42*b21 + a43*b31 + a44*b41));
+Simplify(c42 - (a41*b12 + a42*b22 + a43*b32 + a44*b42));
+Simplify(c43 - (a41*b13 + a42*b23 + a43*b33 + a44*b43));
+Simplify(c44 - (a41*b14 + a42*b24 + a43*b34 + a44*b44));
+Simplify(c45 - (a41*b15 + a42*b25 + a43*b35 + a44*b45));
+
+# Brent equation statistics about non-zero triples:
+# in odd equations  [1, 3]
+# in even equations [0, 2, 4]
+# in kernel columns [1, 2, 4]
+
+# Algorithm properly fulfills all Brent Equations
+
+#
+# End of 4x4x5_61 solution file 's4x4x5_61.yacas.check.txt'
+#

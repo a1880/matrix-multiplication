@@ -1,0 +1,120 @@
+#
+# Yacas script 's2x4x7_45.yacas.check.txt' created 23-May-2025 22:54:07
+#
+# Matrix multiplication method for 2x4x7_45
+#
+# Intermediate products: 45
+#
+P01 := (- a21 + a22 - a23) * (- b33);
+P02 := (- a11 + a14 - a21) * (b12 + b14 - b15 + b24 - b46 - b47);
+P03 := (- a11 - a21) * (b12 + b13 + b14 - b17 + b24 - b33 - b35 + b37 - b46 - b47);
+P04 := (- a23) * (b11 + b12 + b26 - b33 - b35 + b36 + b37 - b46);
+P05 := (a11 + a13 - a14 + a21 - a22 + a23) * (b11 - b14 - b24);
+P06 := (a11 + a13 + a21) * (b11 + b12 + b16 - b33 - b35 + b37);
+P07 := (a11 - a14) * (b15 - b35);
+P08 := (- a11 - a13 - a21 - a23) * (- b11 + b33 + b35 - b37);
+P09 := (- a11 + a14 - a22 + a23) * (- b12 + b35);
+P10 := (a12 - a13 + a22 - a23) * (b32 - b35);
+P11 := a24 * (- b21 - b31 - b41);
+P12 := (a22 - a24) * (- b11 + b14 - b21 + b24);
+P13 := (- a12) * (b13 + b23 + b43);
+P14 := (a13 + a24) * (- b11 + b14 + b24 + b31 + b44);
+P15 := (- a14) * (- b12 + b15 - b42 + b45);
+P16 := (a11 + a13 - a14 + a21 + a23 - a24) * (- b14 - b24);
+P17 := (a13 + a21 - a22 + a23) * (b11 - b14 - b33);
+P18 := (- a11 + a14 - a21 + a24) * (- b14 - b24 + b46 + b47);
+P19 := (a12 + a24) * (b11 - b14 + b21 - b24 + b43);
+P20 := (a14 + a24) * (- b41 + b43 + b44);
+P21 := (a12 + a22 - a23) * (- b12 - b26 + b32 + b46);
+P22 := (- a13 - a23) * (b11 - b14 - b31 + b34);
+P23 := (a12 + a14 + a22 + a24) * (- b42 - b46);
+P24 := (- a11 + a12 - a13 + a14) * (b12 - b35 - b46);
+P25 := (- a12) * (b12 + b22 - b25 + b26 - b35 - b46);
+P26 := (- a12 + a14) * (- b11 + b14 + b24 - b43);
+P27 := (- a22 - a24) * (- b25 - b35);
+P28 := (- a12 - a22) * (- b12 + b21 - b23 + b27 + b35 + b46);
+P29 := (a21 - a22 + a23 - a24) * (- b12);
+P30 := (- a21) * (- b14 + b15 - b16 - b17 - b24 - b27 - b35 - b46);
+P31 := (- a13 + a14) * (- b14 - b24 - b44);
+P32 := (a11 - a12) * (- b11 + b13 + b14);
+P33 := (- a11 - a13) * (b16 + b46);
+P34 := (a23 - a24) * (- b11 + b31);
+P35 := (a12 + a21) * (b11 + b12 - b13 - b14 - b24 - b27 - b35 - b46);
+P36 := (- a12 - a22 - a24) * (b12 - b25 - b35 + b42);
+P37 := a13 * (- b12 - b16 + b32 + b36);
+P38 := (a11 + a13 - a14) * b11;
+P39 := (- a24) * (- b12 - b14 - b24 + b25 + b35 - b45 + b46 + b47);
+P40 := (a21 - a22) * (b11 + b12 - b14 - b24 - b27 - b33 - b35 - b46);
+P41 := (- a22 + a23) * (b26 - b46);
+P42 := (- a11 + a12 - a13 - a21 + a22 - a23) * (- b24);
+P43 := (- a11 - a13 - a22 - a24) * (- b12 + b46);
+P44 := (- a13) * (- b11 + b14 + b24 + b33 + b34 + b44);
+P45 := (a12 + a22) * (- b12 + b22 + b32 - b42);
+
+c11 :=                                                               P11             + P14                         + P19 - P20                               - P26                         - P31                                     + P38;
+c12 :=                                                   P09 - P10                                                             + P21       - P23 + P24 - P25       - P27                                                 + P36                         - P41       + P43;
+c13 := - P01                   + P05                                           - P13                   - P17                                                 - P26                               + P32                                                       + P42;
+c14 :=   P01                   - P05                                                                   + P17                                                                               - P31                                     + P38                   - P42       - P44;
+c15 :=                                       P07                                           - P15                                           - P23 + P24             - P27                                                 + P36                                     + P43;
+c16 :=                                                 - P09 + P10                                                             - P21             - P24                                                 - P33                   + P37                   + P41;
+c17 := - P01 - P02 + P03       + P05 + P06 + P07                                                       - P17                                     + P24                               - P30       + P32 + P33       - P35             - P38                   + P42;
+c21 :=                           P05                               - P11 - P12                   - P16                                                                                                       + P34                   - P38;
+c22 :=                                                                                                                         - P21                   + P25       + P27       - P29                                     - P36                         + P41                   + P45;
+c23 :=   P01                                                             - P12 + P13                               + P19                                                 + P28                                     - P35                         + P40;
+c24 := - P01                   + P05                                                 + P14       - P16 - P17                         - P22                                                                   + P34                   - P38                               + P44;
+c25 :=         P02                         - P07       + P09                                                 + P18                                                 + P27       - P29                                                       + P39;
+c26 :=                   - P04       + P06       - P08                                                                                                                         + P29                   + P33                                           - P41       - P43;
+c27 :=   P01 + P02             - P05 - P06 - P07 + P08 + P09                                     + P16       + P18                                                             - P29 + P30             - P33                         + P38       + P40             + P43;
+
+# Solution statistics:
+# ====================
+#
+#                        [a]        [b]        [c]      total
+# --------------------------------------------------------------
+# operands                117        178        117        412
+# + operands               35         65         41        141
+# - operands               37         68         31        136
+# term length          1 .. 6    1 .. 10     1 .. 6    1 .. 10
+# terms with 1 op           9          4          9         22
+
+#
+# Non-zero triples (= products of three coefficients != 0)
+# ----------------------------------------------------------
+# (equations are 'odd' for (a_row == c_row) && (a_col == b_row) && (b_col == c_col))
+#
+# Total number of equations      3,136
+# Odd triples per equation       1, 3
+# Odd equations                  56
+# Odd equations with 1 triple    54
+# Even triples per equation      0, 2, 4, 6
+# Even equations                 3,080
+# Even equations with 0 triples  2,657
+# Odd triples per product        1, 2, 3, 4
+# Even triples per product       3 .. 104
+# Products with 1 odd triple     33
+#
+Simplify(c11 - (a11*b11 + a12*b21 + a13*b31 + a14*b41));
+Simplify(c12 - (a11*b12 + a12*b22 + a13*b32 + a14*b42));
+Simplify(c13 - (a11*b13 + a12*b23 + a13*b33 + a14*b43));
+Simplify(c14 - (a11*b14 + a12*b24 + a13*b34 + a14*b44));
+Simplify(c15 - (a11*b15 + a12*b25 + a13*b35 + a14*b45));
+Simplify(c16 - (a11*b16 + a12*b26 + a13*b36 + a14*b46));
+Simplify(c17 - (a11*b17 + a12*b27 + a13*b37 + a14*b47));
+Simplify(c21 - (a21*b11 + a22*b21 + a23*b31 + a24*b41));
+Simplify(c22 - (a21*b12 + a22*b22 + a23*b32 + a24*b42));
+Simplify(c23 - (a21*b13 + a22*b23 + a23*b33 + a24*b43));
+Simplify(c24 - (a21*b14 + a22*b24 + a23*b34 + a24*b44));
+Simplify(c25 - (a21*b15 + a22*b25 + a23*b35 + a24*b45));
+Simplify(c26 - (a21*b16 + a22*b26 + a23*b36 + a24*b46));
+Simplify(c27 - (a21*b17 + a22*b27 + a23*b37 + a24*b47));
+
+# Brent equation statistics about non-zero triples:
+# in odd equations  [1, 3]
+# in even equations [0, 2, 4, 6]
+# in kernel columns [1, 2, 3, 4]
+
+# Algorithm properly fulfills all Brent Equations
+
+#
+# End of 2x4x7_45 solution file 's2x4x7_45.yacas.check.txt'
+#
