@@ -14,6 +14,8 @@ Some of the solutions have complex, float or extended coefficient sets, <br/>not
 
 [Paper preprint](https://github.com/a1880/matrix-multiplication/blob/master/papers/Kemper%20-%202025%20-%20From%20F2%20to%20Z%20Solutions%20for%20Brent%20Equations.pdf) was updated accordingly.
 
+Fixed conversion yacas/tensor in akExtractMatMultSolution
+
 ## 17-May-2025 Solution statistics
 
 Added statistical outputs to akExtractMatMultSolutions

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading;
 using static akExtractMatMultSolution.MatrixDimensions;
@@ -1901,7 +1900,7 @@ namespace akExtractMatMultSolution
             for (int row = 1; row <= rows; row++)
                 for (int col = 1; col <= cols; col++)
                 {
-                    int val = transposed ? litArray[col, row, product] : litArray[row, col, product];
+                    int val = litArray[row, col, product];
 
                     Check(val != undefined, 
                           Literal(literalName, row, col, product) + " is undefined");
@@ -1920,7 +1919,7 @@ namespace akExtractMatMultSolution
                             term += "+ ";
                         }
 
-                        term += $"{elementName}{row}{col} ";
+                        term += transposed ? $"{elementName}{col}{row} " : $"{elementName}{row}{col} ";
                     }
                 }
 

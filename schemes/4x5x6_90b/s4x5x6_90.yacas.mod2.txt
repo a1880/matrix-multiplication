@@ -1,5 +1,5 @@
 #
-# Yacas script 's4x5x6_90.yacas.mod2.txt' created 24-May-2025 19:30:19
+# Yacas script 's4x5x6_90.yacas.mod2.txt' created 24-May-2025 21:31:54
 #
 # Matrix multiplication method (mod 2!) for 4x5x6_90
 #
