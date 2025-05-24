@@ -11,39 +11,38 @@ The solutions provided include:
 $N \times M \times P$ \_ $r$ stands for multiplication of an $N \times M$
 matrix times an $M \times P$ matrix, using $r$ elementary products.
 
-| Solution  | Remarks                                                                       |
-| --------- | ----------------------------------------------------------------------------- |
-| 2x2x2_07  | small example á la [Strassen][1]                                              |
-| 2x3x2_11  | small example                                                                 |
-| 4x4x4_47  | the [Fawzi][2] solution for $\mathbb{Z_2}$                                    |
-| 4x5x6_90  | solution of [Kauers+Wood][3] re-lifted                                        |
-| 5x5x5_93  | solution of [Moosbauer+Poole][4] re-lifted                                    |
-| 4x6x6_106 | solution of [Kauers+Wood][3] re-lifted                                        |
-| 5x5x6_110 | solution of [Kauers+Wood][3] re-lifted                                        |
-| 5x5x7_127 | solution of [Kauers+Wood][3] re-lifted                                        |
-| 5x6x6_130 | solution of [Kauers+Wood][3] re-lifted                                        |
-| 5x6x7_150 | solution of [Kauers+Wood][3] re-lifted                                        |
-| 6x6x6_153 | solution of [Moosbauer+Poole][4] re-lifted                                    |
+| Solution  | Remarks                                    |
+| --------- | ------------------------------------------ |
+| 2x2x2_07  | small example á la [Strassen][1]           |
+| 2x3x2_11  | small example                              |
+| 4x4x4_47  | the [Fawzi][2] solution for $\mathbb{Z_2}$ |
+| 4x5x6_90  | solution of [Kauers+Wood][3] re-lifted     |
+| 5x5x5_93  | solution of [Moosbauer+Poole][4] re-lifted |
+| 4x6x6_106 | solution of [Kauers+Wood][3] re-lifted     |
+| 5x5x6_110 | solution of [Kauers+Wood][3] re-lifted     |
+| 5x5x7_127 | solution of [Kauers+Wood][3] re-lifted     |
+| 5x6x6_130 | solution of [Kauers+Wood][3] re-lifted     |
+| 5x6x7_150 | solution of [Kauers+Wood][3] re-lifted     |
+| 6x6x6_153 | solution of [Moosbauer+Poole][4] re-lifted |
 
 The following solutions of [DeepMind/AlphaEvolve][5] were extracted, converted and analyzed.
 
-| Solution  | Coefficients in solution                                     |
-| --------- | ------------------------------------------------------------ |
-| 3x3x3_23  | $\lbrace -1, +1\rbrace$                                      |
-| 2x4x5_32  | float coefficients $\lbrace -2, -1, -0.5, 0.5, +1, +2\rbrace$|
-| 2x4x7_45  | $\lbrace -1, +1\rbrace$                                      |
-| 2x5x6_47  | $\lbrace -1, +1\rbrace$                                      |
-| 4x4x4_48  | complex coefficients $\mathbb{Z}_{C0.5}$                     |
-| 2x4x8_51  | $\lbrace -1, +1\rbrace$                                      |
-| 3x4x6_54  | float coefficients $\lbrace -1, -0.5, +0.5, +1, +2\rbrace$   |
-| 4x4x5_61  | $\lbrace -1, +1\rbrace$                                      |
-| 3x4x7_63  | complex coefficients $\mathbb{Z}_{C0.5}$                     |
-| 3x5x6_68  | $\lbrace -2, -1, +1, +2\rbrace$                              |
-| 3x4x8_74  | $\lbrace -1, +1\rbrace$                                      |
-| 3x5x7_80  | $\lbrace -2, -1, +1, +2\rbrace$                              |
-| 4x5x6_90  | $\lbrace -2, -1, +1, +2\rbrace$                              |
-| 5x5x5_93  | $\lbrace -1, +1\rbrace$                                      |
-
+| Solution | Coefficients in solution                                                 |
+| -------- | ------------------------------------------------------------------------ |
+| 3x3x3_23 | $\lbrace -1, +1\rbrace$                                                  |
+| 2x4x5_32 | float coefficients $\lbrace -2, -1, -0.5, 0.5, +1, +2\rbrace$            |
+| 2x4x7_45 | $\lbrace -1, +1\rbrace$                                                  |
+| 2x5x6_47 | $\lbrace -1, +1\rbrace$                                                  |
+| 4x4x4_48 | complex coefficients $\mathbb{Z}_{C0.5}$                                 |
+| 2x4x8_51 | $\lbrace -1, +1\rbrace$                                                  |
+| 3x4x6_54 | float coefficients $\lbrace -1, -0.5, +0.5, +1, +2\rbrace$               |
+| 4x4x5_61 | $\lbrace -1, +1\rbrace$                                                  |
+| 3x4x7_63 | complex coefficients $\mathbb{Z}_{C0.5}$                                 |
+| 3x5x6_68 | $\lbrace -2, -1, +1, +2\rbrace$                                          |
+| 3x4x8_74 | $\lbrace -1, +1\rbrace$                                                  |
+| 3x5x7_80 | $\lbrace -2, -1, +1, +2\rbrace$                                          |
+| 4x5x6_90 | $\lbrace -2, -1, +1, +2\rbrace$ <br/>relifted to $\lbrace -1, +1\rbrace$ |
+| 5x5x5_93 | $\lbrace -1, +1\rbrace$                                                  |
 
 ## Papers
 
