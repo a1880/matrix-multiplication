@@ -358,9 +358,9 @@ namespace akExtractMatMultSolution
 
         private void SetOperands(IEnumerable<string> posOps, IEnumerable<string> negOps, bool updateKey = true)
         {
-            posOperands = posOps.ToArray();
+            posOperands = [.. posOps];
             IsSorted(posOperands);
-            negOperands = negOps.ToArray();
+            negOperands = [.. negOps];
             IsSorted(negOperands);
 
             if (updateKey)

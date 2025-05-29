@@ -18,6 +18,7 @@ namespace akExtractMatMultSolution
             {
                 CheckDimension(x);
                 arr[x] = value;
+
                 Assert(!Readonly);
                 Assert(this[x].Equals(value));
             }

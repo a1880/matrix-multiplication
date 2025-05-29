@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using static akExtractMatMultSolution.Util;
 
@@ -20,18 +22,28 @@ namespace akExtractMatMultSolution
         public static int[] Fgd_all = null;
 
         public enum Mat { F = 0, G = 1, D = 2, unknown = 999 };
+        public readonly static int F = (int)Mat.F;
+
+        public readonly static int G = (int)Mat.G;
+
+        public readonly static int D = (int)Mat.D;
 
         public static readonly string[] literalName = ["F", "G", "D"];
         public static readonly string[] matrixNames = ["A", "B", "C"];
         public static readonly string[] coefficientName = ["a", "b", "c"];
 
+        private static bool RowsColsAreValid = false;
+        private static bool HasComplexCoefficients = false;
         public static int[] Rows;
         public static int[] Cols;
 
-        public const int undefined = -999;
-        public static DynArray3D<int> litArrayF;
-        public static DynArray3D<int> litArrayG;
-        public static DynArray3D<int> litArrayD;
+        public static IEnumerable<int>[] RowsRange;
+        public static IEnumerable<int>[] ColsRange;
+
+        public const int undefined = int.MinValue;
+        public static DynArray3D<Coefficient> litArrayF;
+        public static DynArray3D<Coefficient> litArrayG;
+        public static DynArray3D<Coefficient> litArrayD;
 
         public enum AlgorithmMode { FullBrent, Mod2Brent };
 
@@ -40,7 +52,7 @@ namespace akExtractMatMultSolution
         public static bool transposedMode = false;
 
         //  initiated by CreateLiteralArrays()
-        public static DynArray3D<int>[] litArrays;
+        public static DynArray3D<Coefficient>[] litArrays;
 
         /// <summary>
         /// Count number of plus/minus elements in term
@@ -55,22 +67,21 @@ namespace akExtractMatMultSolution
             int minus = 0;
             bool first = true;
 
-            for (int row = 1; row <= Rows[(int)mat]; row++)
-                for (int col = 1; col <= Cols[(int)mat]; col++)
-                {
-                    int lit = litArrays[(int)mat][row, col, k];
+            foreach ((int row, int col) in Indices(mat))
+            {
+                Coefficient lit = litArrays[(int)mat][row, col, k];
 
-                    if (lit > 0)
-                    {
-                        plus += first ? 2 : 1;
-                        first = false;
-                    }
-                    else if (lit < 0)
-                    {
-                        minus += first ? 2 : 1;
-                        first = false;
-                    }
+                if (lit > 0)
+                {
+                    plus += first ? 2 : 1;
+                    first = false;
                 }
+                else if (lit < 0)
+                {
+                    minus += first ? 2 : 1;
+                    first = false;
+                }
+            }
 
             return (plus, minus);
         }
@@ -79,45 +90,44 @@ namespace akExtractMatMultSolution
         public static (int ops, int add_ops, int sub_ops)
             GetTermStatistics(int fgd, int product)
         {
-            bool transpose = (fgd == (int)Mat.D) && transposedMode;
-            return GetTermStatistics(Rows[fgd], Cols[fgd], product, litArrays[fgd], transpose);
+            bool transpose = (fgd == D) && transposedMode;
+            return GetTermStatistics(fgd, product, litArrays[fgd], transpose);
         }
 
         public static (int ops, int add_ops, int sub_ops)
-            GetTermStatistics(int rows, int cols, int product, DynArray3D<int> litArray, bool transpose)
+            GetTermStatistics(int fgd, int product, DynArray3D<Coefficient> litArray, bool transpose)
         {
             int ops = 0;
             int add_ops = 0;
             int sub_ops = 0;
 
             bool first = true;
-            for (int row = 1; row <= rows; row++)
-                for (int col = 1; col <= cols; col++)
-                {
-                    int val = transpose ? litArray[col, row, product] : litArray[row, col, product];
+            foreach ((int row, int col) in Indices(fgd))
+            {
+                Coefficient val = transpose ? litArray[col, row, product] : litArray[row, col, product];
 
-                    if (val != 0)
+                if (val != 0)
+                {
+                    ops++;
+                    if (!first)
                     {
-                        ops++;
-                        if (!first)
+                        if (val < 0)
                         {
-                            if (val < 0)
-                            {
-                                sub_ops++;
-                            }
-                            else
-                            {
-                                add_ops++;
-                            }
+                            sub_ops++;
                         }
                         else
                         {
-                            first = false;
+                            add_ops++;
                         }
                     }
+                    else
+                    {
+                        first = false;
+                    }
                 }
+            }
 
-            return (ops: ops, add_ops: add_ops, sub_ops: sub_ops);
+            return (ops, add_ops, sub_ops);
         }
 
 
@@ -129,23 +139,29 @@ namespace akExtractMatMultSolution
         /// <param name="flip">Array of switchs to force flipping</param>
         private static void FlipLiterals(int k, bool[] flip)
         {
-            for (int ri = 0; ri <= (int)Mat.D; ri++)
+            foreach (int fgd in Fgd_all)
             {
-                if (flip[ri])
+                if (flip[fgd])
                 {
-                    for (int row = 1; row <= Rows[ri]; row++)
-                        for (int col = 1; col <= Cols[ri]; col++)
-                        {
-                            int lit = litArrays[ri][row, col, k];
+                    foreach ((int row, int col) in Indices(fgd))
+                    {
+                        Coefficient lit = litArrays[fgd][row, col, k];
 
-                            litArrays[ri][row, col, k] = -lit;
-                        }
+                        litArrays[fgd][row, col, k] = -lit;
+                    }
                 }
             }
         }
 
         public static void BeautifyLiterals()
         {
+            if (HasComplexCoefficients)
+            {
+                o("# No attempt to reduce minus signs:");
+                o("# Complex coefficients don't lend themselves to sign flipping.");
+                o("#");
+                return;
+            }
             SetArraysToReadonly(_readonly: false);
 
             int reducedMinusSigns = 0;
@@ -203,48 +219,55 @@ namespace akExtractMatMultSolution
 
         public static void CreateLiteralArrays(int defaultValue)
         {
-            litArrayF = new DynArray3D<int>(defaultValue);
-            litArrayG = new DynArray3D<int>(defaultValue);
-            litArrayD = new DynArray3D<int>(defaultValue);
+            litArrayF = new DynArray3D<Coefficient>(defaultValue);
+            litArrayG = new DynArray3D<Coefficient>(defaultValue);
+            litArrayD = new DynArray3D<Coefficient>(defaultValue);
 
             litArrays = [litArrayF, litArrayG, litArrayD];
         }
 
         private static void DetermineMode()
         {
-            int min = int.MaxValue;
+            Coefficient min = int.MaxValue;
             bool bInLowerHalf = false;
+            bool bComplexValues = false;
 
             //  enumerate all literals to get the minimum value
             //  negative values cannot happen for mod 2 mode
-            for (int ri = 0; ri < Rows.Length; ri++)
-                for (int row = 1; row <= Rows[ri]; row++)
-                    for (int col = 1; col <= Cols[ri]; col++)
-                        foreach (int k in Products)
+            foreach (int fgd in Fgd_all)
+                foreach ((int row, int col) in Indices(fgd))
+                    foreach (int k in Products)
+                    {
+                        try
                         {
-                            try
+                            Coefficient lit = litArrays[fgd][row, col, k];
+
+                            if ( lit.IsComplex)
                             {
-                                int lit = litArrays[ri][row, col, k];
-
-                                if (lit < min)
-                                {
-                                    min = lit;
-                                }
-
-                                if (ri == (int)Mat.D)
-                                {
-                                    bInLowerHalf = bInLowerHalf
-                                                   || ((Math.Abs(lit) <= 1) && (row > col));
-                                }
+                                bComplexValues = true;
+                                break;
                             }
-                            catch (Exception)
+                            if (lit < min)
                             {
-                                //  ignore
+                                min = lit;
+                            }
+
+                            if (fgd == (int)Mat.D)
+                            {
+                                bInLowerHalf = bInLowerHalf
+                                               || ((lit != litArrays[fgd].Default) && (row > col));
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            //  ignore
+                            Debug.WriteLine(ex.Message);
+                        }
+                    }
 
-            transposedMode = !bInLowerHalf && (Rows[(int)Mat.D] == Cols[(int)Mat.D]);
-            algorithmMode = (min < 0) ? AlgorithmMode.FullBrent : AlgorithmMode.Mod2Brent;
+            transposedMode = !bInLowerHalf && (Rows[(int)Mat.D] == Cols[(int)Mat.D]) && !bComplexValues;
+            algorithmMode = (bComplexValues || (min < 0)) ? AlgorithmMode.FullBrent : AlgorithmMode.Mod2Brent;
+            HasComplexCoefficients = bComplexValues;
         }
 
         public static void GetProblemDimensions()
@@ -277,7 +300,37 @@ namespace akExtractMatMultSolution
             Rows = [aRows, bRows, cRows];
             Cols = [aCols, bCols, cCols];
 
+            RowsRange = new IEnumerable<int>[Fgd_all.Length];
+            ColsRange = new IEnumerable<int>[Fgd_all.Length];
+
+            foreach (int fgd in Fgd_all)
+            {
+                RowsRange[fgd] = Range(1, Rows[fgd]);
+                ColsRange[fgd] = Range(1, Cols[fgd]);
+            }
+            RowsColsAreValid = true;
+
             DetermineMode();
+        }
+
+        public static IEnumerable<(int row, int col)> AIndices => Indices(F);
+        public static IEnumerable<(int row, int col)> BIndices => Indices(G);
+        public static IEnumerable<(int row, int col)> CIndices => Indices(D);
+
+        public static IEnumerable<int> ARows => RowsRange[F];
+        public static IEnumerable<int> ACols => ColsRange[F];
+        public static IEnumerable<int> BRows => RowsRange[G];
+        public static IEnumerable<int> BCols => ColsRange[G];
+        public static IEnumerable<int> CRows => RowsRange[D];
+        public static IEnumerable<int> CCols => ColsRange[D];
+
+        public static IEnumerable<(int row, int col)> Indices(Mat mat) => Indices((int)mat);
+
+        public static IEnumerable<(int row, int col)> Indices(int fgd)
+        {
+            Check(RowsColsAreValid, "Problem dimensions not determined yet!");
+            return
+                RowsRange[fgd].SelectMany(i => ColsRange[fgd].Select(j => (i, j)));
         }
 
         public static string ProductName(int product)
@@ -295,23 +348,27 @@ namespace akExtractMatMultSolution
         /// <param name="selectedACols"></param>
         /// <param name="selectedBCols"></param>
         /// <param name="selectedProducts"></param>
-        public static void ReduceLiteralArrays(int[] selectedARows, int[] selectedACols, int[] selectedBCols, int[] selectedProducts)
+        public static void ReduceLiteralArrays(
+            int[] selectedARows, 
+            int[] selectedACols, 
+            int[] selectedBCols, 
+            int[] selectedProducts)
         {
-            DynArray3D<int> F = new(0);
-            DynArray3D<int> G = new(0);
-            DynArray3D<int> D = new(0);
+            DynArray3D<Coefficient> F = new(0);
+            DynArray3D<Coefficient> G = new(0);
+            DynArray3D<Coefficient> D = new(0);
 
             //  effective "real" row/col values
             int raEff = 0;
             int rbEff = 0;
 
-            for (int ra = 1; ra <= aRows; ra++)
+            foreach (int ra in ARows)
             {
                 if (selectedARows.Contains(ra))
                 {
                     raEff++;
                     int caEff = 0;
-                    for (int ca = 1; ca <= aCols; ca++)
+                    foreach (int ca in ACols)
                     {
                         if (selectedACols.Contains(ca))
                         {
@@ -332,7 +389,7 @@ namespace akExtractMatMultSolution
                     }
 
                     int cbEff = 0;
-                    for (int cb = 1; cb <= bCols; cb++)
+                    foreach (int cb in BCols)
                     {
                         if (selectedBCols.Contains(cb))
                         {
@@ -354,14 +411,14 @@ namespace akExtractMatMultSolution
                 }
             }
 
-            for (int rb = 1; rb <= bRows; rb++)
+            foreach (int rb in BRows)
             {
                 if (selectedACols.Contains(rb))
                 {
                     rbEff++;
 
                     int cbEff = 0;
-                    for (int cb = 1; cb <= bCols; cb++)
+                    foreach (int cb in BCols)
                     {
                         if (selectedBCols.Contains(cb))
                         {

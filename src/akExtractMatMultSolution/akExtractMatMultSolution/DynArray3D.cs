@@ -22,6 +22,8 @@ namespace akExtractMatMultSolution
             }
         }
 
+        public T Default => defaultValue;
+
         private void CheckDimension(int x)
         {
             Assert(x >= 0);

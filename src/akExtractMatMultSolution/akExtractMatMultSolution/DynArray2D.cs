@@ -11,7 +11,7 @@ namespace akExtractMatMultSolution
 
         public T this[int x, int y]
         {
-            get => x < arr.Length ? this.arr[x][y] : this.defaultValue;
+            get => x < arr.Length ? arr[x][y] : defaultValue;
 
             set
             {

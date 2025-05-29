@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -9,37 +10,50 @@ namespace akExtractMatMultSolution
     {
         public static StreamWriter fOut = null;
 
-        public static bool ArraysEqual(string[] arr1, string[] arr2)
-        {
-            return
-            ReferenceEquals(arr1, arr2) || (
-                arr1 != null && arr2 != null &&
-                arr1.Length == arr2.Length &&
-                arr1.Select((a, i) => arr2[i].Equals(a)).All(i => i)
-            );
-        }
-
         public static void Assert(bool condition)
         {
             Check(condition, "assertion");
         }
 
 #pragma warning disable IDE1006 // Naming Styles
+        public static float atof(string s)
+#pragma warning restore IDE1006 // Naming Styles
+        {
+            CheckNull(s);
+            if (!float.TryParse(s, out float result))
+            {
+                throw new ArgumentException($"Cannot read '{s}' as float");
+            }
+
+            return result;
+        }
+
+#pragma warning disable IDE1006 // Naming Styles
         public static int atoi(string s)
 #pragma warning restore IDE1006 // Naming Styles
         {
-            int i = 0;
-
-            try
+            CheckNull(s);
+            if (!int.TryParse(s, out int i))
             {
-                i = int.Parse(s);
-            }
-            catch (Exception ex)
-            {
-                Fatal($"Cannot read '{s}' as integer: {ex.Message}");
+                throw new ArgumentException($"Cannot read '{s}' as integer");
             }
 
             return i;
+        }
+
+        public static string BuildDate()
+        {
+            string s = Properties.Resources.BuildDate.Substring(0, 10);
+
+            int dd = ExtractInt(s, 0, 2);
+            int mm = ExtractInt(s, 3, 2);
+            int yyyy = ExtractInt(s, 6, 4);
+
+            DateTime dt = new(yyyy, mm, dd);
+                    
+            s = dt.ToString("dd-MMM-yyyy", CultureInfo.InvariantCulture);
+
+            return s;
         }
 
         public static void Check(bool cond, string format, params object[] args)
@@ -51,6 +65,7 @@ namespace akExtractMatMultSolution
                 Finish(1);
             }
         }
+
         public static void CheckFile(string fileName, string purpose)
         {
             Check(!string.IsNullOrEmpty(fileName), $"Empty filename for {purpose} file");
@@ -61,6 +76,23 @@ namespace akExtractMatMultSolution
             }
         }
 
+        public static void CheckNull(object obj)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException("Null argument not allowed!");
+            }
+        }
+
+        public static int ExtractInt(string s, int offset, int length)
+        {
+            CheckNull(s);
+            if (offset + length > s.Length)
+            {
+                throw new ArgumentException($"ExtactInt: access to '{s}' out of bounds!");
+            }
+            return atoi(s.Substring(offset, length));
+        }
 
         public static void Finish(int code)
         {
@@ -84,6 +116,7 @@ namespace akExtractMatMultSolution
 
         public static void Fatal(string msg)
         {
+            CheckNull(msg);
             o("Fatal error:");
             o(msg);
             Finish(1);
@@ -111,6 +144,7 @@ namespace akExtractMatMultSolution
         public static void o(string s = "")
 #pragma warning restore IDE1006 // Naming Styles
         {
+            CheckNull(s);
             if (fOut != null)
             {
                 fOut.WriteLine(s);
@@ -169,7 +203,15 @@ namespace akExtractMatMultSolution
         /// </summary>
         public static int[] Range(int start, int count)
         {
-            return Enumerable.Range(start, count).ToArray();
+            return [.. Enumerable.Range(start, count)];
+        }
+
+        /// <summary>
+        /// Return current date and time as string
+        /// </summary>
+        public static string Timestamp()
+        {
+            return DateTime.Now.ToString("dd-MMM-yyyy HH:mm");
         }
 
         private static readonly char[] SpaceSeparator = [' '];

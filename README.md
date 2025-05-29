@@ -27,22 +27,22 @@ matrix times an $M \times P$ matrix, using $r$ elementary products.
 
 The following solutions of [DeepMind/AlphaEvolve][5] were extracted, converted and analyzed.
 
-| Solution | Coefficients in solution                                                  |
-| -------- | ------------------------------------------------------------------------- |
-| 3x3x3_23 | $\lbrace -1, +1\rbrace$                                                   |
-| 2x4x5_32 | float coefficients $\lbrace -2, -1, -0.5, 0.5, +1, +2\rbrace$             |
-| 2x4x7_45 | $\lbrace -1, +1\rbrace$                                                   |
-| 2x5x6_47 | $\lbrace -1, +1\rbrace$                                                   |
-| 4x4x4_48 | complex coefficients $\mathbb{Z}_{C0.5}$                                  |
-| 2x4x8_51 | $\lbrace -1, +1\rbrace$                                                   |
-| 3x4x6_54 | float coefficients $\lbrace -1, -0.5, +0.5, +1, +2\rbrace$                |
-| 4x4x5_61 | $\lbrace -1, +1\rbrace$                                                   |
-| 3x4x7_63 | complex coefficients $\mathbb{Z}_{C0.5}$                                  |
-| 3x5x6_68 | $\lbrace -2, -1, +1, +2\rbrace$                                           |
-| 3x4x8_74 | $\lbrace -1, +1\rbrace$                                                   |
-| 3x5x7_80 | $\lbrace -2, -1, +1, +2\rbrace$                                           |
-| 4x5x6_90 | $\lbrace -2, -1, +1, +2\rbrace$ <br/>relifted to $\lbrace -1, +1 \rbrace$ |
-| 5x5x5_93 | $\lbrace -1, +1\rbrace$                                                   |
+| Solution | Coefficients in solution                                      |
+| -------- | ------------------------------------------------------------- |
+| 3x3x3_23 | $\lbrace -1, +1\rbrace$                                       |
+| 2x4x5_32 | float coefficients $\lbrace -2, -1, -0.5, 0.5, +1, +2\rbrace$ |
+| 2x4x7_45 | $\lbrace -1, +1\rbrace$                                       |
+| 2x5x6_47 | $\lbrace -1, +1\rbrace$                                       |
+| 4x4x4_48 | complex coefficients $\mathbb{Z}_{C0.5}$                      |
+| 2x4x8_51 | $\lbrace -1, +1\rbrace$                                       |
+| 3x4x6_54 | float coefficients $\lbrace -1, -0.5, +0.5, +1, +2\rbrace$    |
+| 4x4x5_61 | $\lbrace -1, +1\rbrace$                                       |
+| 3x4x7_63 | complex coefficients $\mathbb{Z}_{C0.5}$                      |
+| 3x5x6_68 | $\lbrace -2, -1, +1, +2\rbrace$                               |
+| 3x4x8_74 | $\lbrace -1, +1\rbrace$                                       |
+| 3x5x7_80 | $\lbrace -2, -1, +1, +2\rbrace$                               |
+| 4x5x6_90 | $\lbrace -2, -1, +1, +2\rbrace$ <br/>relifted to { -1, +1 }   |
+| 5x5x5_93 | $\lbrace -1, +1\rbrace$                                       |
 
 ## Papers
 

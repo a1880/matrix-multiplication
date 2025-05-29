@@ -1,5 +1,11 @@
 # Change Log
 
+## 29-May-2025 eXmm (former akExtractMatMultSolution)
+
+eXmm was extended to process complex coefficients.
+A recusive descent parser was implemented to translate expressions
+into abstract syntax trees (AST).
+
 ## 24-May-2025 AlphaEvolve solutions
 
 [AlphaEvolve solutions](https://github.com/google-deepmind/alphaevolve_results) were converted and analyzed with akDumpNumpyTensor

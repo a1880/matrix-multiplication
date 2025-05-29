@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using static akExtractMatMultSolution.MatrixDimensions;
 using static akExtractMatMultSolution.Util;
@@ -17,80 +16,81 @@ namespace akExtractMatMultSolution
         [
             "usage:",
             "",
-            "akExtractMatMultSolution akboole_solution_file [yacas_script_output_file [brent_equations_file]]",
+            "eXmm akboole_solution_file [yacas_script_output_file [brent_equations_file]]",
             "Translate akBoole solution file to Yacas algorithm file.",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --sat akboole_cnf_file sat_solution_file [yacas_script_output_file [brent_equations_file]]",
+            "eXmm --sat akboole_cnf_file sat_solution_file [yacas_script_output_file [brent_equations_file]]",
             "Translate akBool CNF input and SAT solver solution file to Yacas algorithm file",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --gringo gringo_solution_file [yacas_script_output_file [brent_equations_file]]",
+            "eXmm --gringo gringo_solution_file [yacas_script_output_file [brent_equations_file]]",
             "Translate Gringo solution file to Yacas algorithm file",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --bini bini_solution_file [yacas_script_output_file [brent_equations_file]]",
+            "eXmm --bini bini_solution_file [yacas_script_output_file [brent_equations_file]]",
             "Translate solution from Bini matrix form in Yacas algorithm file",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --binigen yacas_solution_file [bini_output_file [brent_equations_file]]",
+            "eXmm --binigen yacas_solution_file [bini_output_file [brent_equations_file]]",
             "Translate Yacas algorithm file to Bini matrix format",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --tensor tensor_solution_file [yacas_script_file [brent_equations_file]]",
+            "eXmm --tensor tensor_solution_file [yacas_script_file [brent_equations_file]]",
             "Translate tensor solution format to Yacas algorithm file.",
             "In tensor solution form, each product is a product of a, b and c sums.",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --tensorgen yacas_solution_file [tensor_output_file [brent_equations_file]]",
+            "eXmm --tensorgen yacas_solution_file [tensor_output_file [brent_equations_file]]",
             "Translate Yacas algorithm file to tensor solution form.",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --combine akboole_mod2_solution akboole_rev_solution [yacas_script_output_file [brent_equations_file]]",
+            "eXmm --combine akboole_mod2_solution akboole_rev_solution [yacas_script_output_file [brent_equations_file]]",
             "Combine akBoole solutions for the mod2 case and the revised case into a universal Yacas algorithm file.",
             "The revised solution provides '+'/'-' signs for the mod 2 solution. 1 = '+', 0 = '-'",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --yacas yacas_solution_file [unified_yacas_script_output_file [brent_equations_file]]",
+            "eXmm --yacas yacas_solution_file [unified_yacas_script_output_file [brent_equations_file]]",
             "Unify a Yacas algorithm to adjust syntax and layout.",
             "Show statistics of the algorithm",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --graph yacas_solution_file [graphviz_detail_file [graphviz_overview_file [product_report_file]]]",
+            "eXmm --graph yacas_solution_file [graphviz_detail_file [graphviz_overview_file [product_report_file]]]",
             "Translate Yacas algorithm file into a GraphViz graph",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --reduce yacas_solution_file ixjxn [yacas_script_output_file]",
+            "eXmm --reduce yacas_solution_file ixjxn [yacas_script_output_file]",
             "Derive a reduced solution for the ixjxn problem.",
-            "i = number of A rows, j = number of A cols, n = number of C columns",
-            "By default, one row and one column are eliminated from product matrix [C].",
+            "i = number of [a] rows, j = number of [a] columns, n = number of [c] columns",
+            "By default, one row and one column are eliminated from product matrix [c].",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --literals yacas_solution_file [akboole_solution_file [brent_equations_file]]",
+            "eXmm --literals yacas_solution_file [akboole_solution_file [brent_equations_file]]",
             "Translate Yacas algorithm file to akBoole solution format (= list of literals and their values).",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --contrib yacas_solution_file [product_contributions_file [brent_equations_file]]",
+            "eXmm --contrib yacas_solution_file [product_contributions_file [brent_equations_file]]",
             "Show which coefficient contributes to which product",
             "",
             "or",
             "",
-            "akExtractMatMultSolution --cse yacas_solution_file [simplified_yacas_script_output_file [brent_equations_file]]",
+            "eXmm --cse yacas_solution_file [simplified_yacas_script_output_file [brent_equations_file]]",
             "Strive to eliminate common subexpressions from sums in algorithm.",
             "",
-            "Note: use empty string \"\" or \"none\" to suppress output of brent_eqations_file",
+            "Use 'auto' for 'brent_equations_file' to get an automatically generated filename.",
+            "'none' or an empty string will suppress output of Brent Equations in a file.",
             ""
         ];
 
@@ -103,10 +103,10 @@ namespace akExtractMatMultSolution
         };
 
         enum ParseState { started, name, row, col, finished };
+        enum Domain { Int, Float, Complex, Undefined };
 
-        static Dictionary<int, LitDescriptor> dicLit;
 
-        static readonly char[] XSeparator = ['x'];
+        static Dictionary<int, LitDescriptor> dicId2Lit;
 
         static string biniFileName = "";
         static string tensorFileName = "";
@@ -115,12 +115,14 @@ namespace akExtractMatMultSolution
         static string graphvizOverviewFileName = "";
         static string reducedSignature = "";
         static string reducedYacasFileName = "";
-        static string productReportFileName = "";
+        static readonly string productReportFileName = "";
         static string solutionFileName = "";
         static string simplifiedSolutionFileName = "";
         static string productContributionsFileName = "";
         static string yacasInputFileName = "";
         static readonly List<string> reduceResult = [];
+
+        static readonly Parser parser = new();
 
         static void Main(string[] args)
         {
@@ -131,8 +133,11 @@ namespace akExtractMatMultSolution
                 Usage();
             }
 
+            CultureInfo culture = CultureInfo.InvariantCulture;
+
             //  for international data formatting
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
 
             ReadLiteralValues(args);
             GetProblemDimensions();
@@ -150,13 +155,13 @@ namespace akExtractMatMultSolution
             WriteSimplifiedYacasSolution(simplifiedSolutionFileName);
             Finish(0);
         }
-         
+
         private static void Welcome()
         {
             o("");
-            o("akExtractMatMultSolution  -  Recover or Convert Matrix Multiplication Solution");
-            o("------------------------------------------------------------------------------");
-            o($"Compiled: {Properties.Resources.BuildDate.Substring(0,10)}");
+            o("akExtractMatMultSolution - Recover or Convert Matrix Multiplication Solution");
+            o("-------------------------------------------------------------------------------");
+            o($"eXmm {BuildDate()}");
             o("");
 #if DEBUG
             o($"DEBUG mode");
@@ -204,7 +209,7 @@ namespace akExtractMatMultSolution
                     CheckFile(args[2], "SAT solution");
                     o($"Reading CNF/DIMACS file '{args[1]}' and SAT solution file '{args[2]}'");
 
-                    dicLit = [];
+                    dicId2Lit = [];
 
                     CreateLiteralArrays(defaultValue: undefined);
 
@@ -217,11 +222,11 @@ namespace akExtractMatMultSolution
                     CheckFile(args[2], "akBoole revised solution");
                     o($"Reading akBoole solution file '{args[1]}' and revised solution file '{args[2]}'");
 
-                    dicLit = [];
+                    dicId2Lit = [];
 
                     CreateLiteralArrays(defaultValue: undefined);
 
-                    ReadAkBooleSolution(args[1], revisedMode:false);
+                    ReadAkBooleSolution(args[1], revisedMode: false);
                     GetProblemDimensions();
                     ReadAkBooleSolution(args[2], revisedMode: true);
                     break;
@@ -274,9 +279,9 @@ namespace akExtractMatMultSolution
                         break;
                     }
 
-                    if (dicLit.ContainsKey(id))
+                    if (dicId2Lit.ContainsKey(id))
                     {
-                        if (dicLit.TryGetValue(id, out LitDescriptor ld))
+                        if (dicId2Lit.TryGetValue(id, out LitDescriptor ld))
                         {
                             litArrays[(int)ld.mat][ld.row, ld.col, ld.product] = litVal;
                         }
@@ -338,8 +343,8 @@ namespace akExtractMatMultSolution
                         Check((cProduct >= 'a') && (cProduct <= 'z'), $"Invalid product index in '{sName}'");
                         ld.product = 1 + (cProduct - 'a');
 
-                        Check(!dicLit.ContainsKey(id), $"ID {id} already present in dicLit");
-                        dicLit.Add(id, ld);
+                        Check(!dicId2Lit.ContainsKey(id), $"ID {id} already present in dicLit");
+                        dicId2Lit.Add(id, ld);
                     }
                 }
             }
@@ -431,7 +436,7 @@ namespace akExtractMatMultSolution
                     for (int row = 0; row < cRows; row++)
                         for (int col = 0; col < cCols; col++)
                         {
-                            litArrayD[row + 1, col + 1, k] = atoi(v[row * bCols + col]);
+                            litArrayD[row + 1, col + 1, k] = new Coefficient(v[row * bCols + col]);
                         }
 
                     v = Tokenize(arr[2]);
@@ -439,7 +444,7 @@ namespace akExtractMatMultSolution
                     for (int row = 0; row < aRows; row++)
                         for (int col = 0; col < aCols; col++)
                         {
-                            litArrayF[row + 1, col + 1, k] = atoi(v[row * aCols + col]);
+                            litArrayF[row + 1, col + 1, k] = new Coefficient(v[row * aCols + col]);
                         }
 
                     v = Tokenize(arr[3]);
@@ -447,7 +452,7 @@ namespace akExtractMatMultSolution
                     for (int row = 0; row < bRows; row++)
                         for (int col = 0; col < bCols; col++)
                         {
-                            litArrayG[row + 1, col + 1, k] = atoi(v[row * bCols + col]);
+                            litArrayG[row + 1, col + 1, k] = new Coefficient(v[row * bCols + col]);
                         }
                 }
                 else
@@ -475,6 +480,8 @@ namespace akExtractMatMultSolution
                 o("#");
                 o("# Solution for the " + Signature() + $" matrix multiplication problem in Bini matrix {s}format");
                 o("#");
+                o($"~:# eXmm {BuildDate()}");
+                o("#");
                 o("# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss"));
                 o("#");
                 o($"Bini {aRows} {aCols} {bCols} {noOfProducts}");
@@ -485,26 +492,22 @@ namespace akExtractMatMultSolution
                     "Beta";
                 o(s);
 
-                //  arrays in order C A B rather than A B C
-                int[] rows = [cRows, aRows, bRows];
-                int[] cols = [cCols, aCols, bCols];
-                //  arrays in order D F G rather than F G D
-                DynArray3D<int>[] arr = [litArrayD, litArrayF, litArrayG];
+                //  Gamma array first
+                int[] dfg = [D, F, G];
 
                 foreach (int k in Products)
                 {
                     s = k.ToString().PadLeft(3, ' ');
 
-                    for (int dfg = 0; dfg < 3; dfg++)
+                    foreach (int fgd in dfg)
                     {
-                        s = s + " ;" + (dfg == 0 ? " " : "");
-                        for (int row = 1; row <= rows[dfg]; row++)
-                            for (int col = 1; col <= cols[dfg]; col++)
-                            {
-                                int val = arr[dfg][row, col, k];
+                        s = s + " ;" + (fgd == F ? " " : "");
+                        foreach ((int row, int col) in Indices(fgd))
+                        {
+                            Coefficient val = litArrays[fgd][row, col, k];
 
-                                s += val.ToString().PadLeft(3, ' ');
-                            }
+                            s += val.ToString().PadLeft(3, ' ');
+                        }
                     }
 
                     o(s);
@@ -533,6 +536,8 @@ namespace akExtractMatMultSolution
                 o("# Solution for the " + Signature() + $" matrix multiplication problem in tensor {(algorithmMode == AlgorithmMode.Mod2Brent ? "(mod 2!) " : "")}format");
                 o("# Transposed form C = (A*B)^T");
                 o("#");
+                o("# eXmm " + BuildDate());
+                o("#");
                 o("# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss"));
                 o("#");
 
@@ -543,17 +548,8 @@ namespace akExtractMatMultSolution
 
                     foreach (int fgd in Fgd_all)
                     {
-                        string t;
-
-                        if (literalName[fgd] == "D")
-                        {
-                            //  Cpq is expressed in transposed form
-                            t = GetTerm(fgd, k, transposed: true);
-                        }
-                        else
-                        {
-                            t = GetTerm(fgd, k);
-                        }
+                        //  Cpq is expressed in transposed form
+                        string t = GetTerm(fgd, k, transposed: fgd == D);
 
                         if (!t.StartsWith("("))
                         {
@@ -574,41 +570,50 @@ namespace akExtractMatMultSolution
 
         private static void ReadLiteralValuesYacas(string fileName)
         {
-            o($"Extracting variable value assignments");
-
-            yacasInputFileName = fileName;
-            using StreamReader sr = OpenReader(fileName, "Yacas-format solution");
-            while (!sr.EndOfStream)
+            int lineCount = 0;
+            try
             {
-                string s = sr.ReadLine().Trim().ToLower();
+                o($"Extracting variable value assignments");
+                yacasInputFileName = fileName;
+                using StreamReader sr = OpenReader(fileName, "Yacas-format solution");
+                while (!sr.EndOfStream)
+                {
+                    string s = sr.ReadLine().Trim().ToLower();
+                    lineCount++;
 
-                if (s.StartsWith("#") || (s.Length < 2))
-                {
-                    continue;
+                    if (s.StartsWith("#") || (s.Length < 2))
+                    {
+                        continue;
+                    }
+                    else if (s.StartsWith("p"))
+                    {
+                        ReadYacasProduct(s, lineCount);
+                    }
+                    else if (s.StartsWith("c"))
+                    {
+                        ReadYacasSumOfProducts(s, lineCount);
+                    }
+                    else if (s.StartsWith("simplify"))
+                    //  ignore Simplify()
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        Fatal($"Unexpected line: '{s}'");
+                    }
                 }
-                else if (s.StartsWith("p"))
-                {
-                    ReadYacasProduct(s);
-                }
-                else if (s.StartsWith("c"))
-                {
-                    ReadYacasSumOfProducts(s);
-                }
-                else if (s.StartsWith("simplify"))
-                //  ignore Simplify()
-                {
-                    continue;
-                }
-                else
-                {
-                    Fatal($"Unexpected line: '{s}'");
-                }
+            }
+            catch (Exception e)
+            {
+                Fatal($"Line {lineCount}: Error reading Yacas file: {e.Message}");
             }
         }
 
         private static void ReadLiteralValuesTensor(string fileName)
         {
             int product = 0;
+            int lineCount = 0;
 
             o($"Extracting variable value assignments");
 
@@ -616,6 +621,7 @@ namespace akExtractMatMultSolution
             while (!sr.EndOfStream)
             {
                 string s = sr.ReadLine().Trim().ToLower();
+                lineCount++;
 
                 if (s.StartsWith("#") || (s.Length < 2))
                 {
@@ -624,231 +630,218 @@ namespace akExtractMatMultSolution
                 else if (s.StartsWith("("))
                 //  read polynome
                 {
-                    ReadTensorLine(s, ++product);
+                    ReadTensorLine(s, ++product, lineCount);
                 }
                 else
                 {
-                    Fatal($"Unexpected line: '{s}'");
+                    Fatal($"Unexpected line {lineCount}: '{s}'");
                 }
             }
 
             Check(product > 0, "No products found");
         }
 
-        private static void ReadYacasSumOfProducts(string s)
+        private static void ReadYacasSumOfProducts(string s, int lineCount)
         {
-            s = s.Replace(" ", "").Replace(":", "").Replace(";", "") + " ";
-            int row = s[1] - '0';
-            int col = s[2] - '0';
+            s = s.Replace(" ", "").Replace(":", "");
+            int row = ExtractInt(s, offset:1, length:1);
+            int col = ExtractInt(s, offset:2, length:1);
             int eq = s.IndexOf('=');
-            int sign = +1;
-            int product = 0;
-            ParseState state = ParseState.started;
-            int pos = eq;
 
-            Check(eq > 0, "Yacas sum-of-products without '=': " + s);
+            Check(eq > 0, $"Line {lineCount}: Yacas sum-of-products without '=': " + s);
 
-            while (state != ParseState.finished)
+            s = s.Substring(eq + 1);
+
+            AstNode ast = parser.Parse(s, lineCount);
+
+            Check(ast != null, $"Line {lineCount}: No expression in Yacas sum of products");
+
+            ReadYacasSumOfProducts(ast, row, col, sign: 1);
+        }
+
+        private static void ReadYacasSumOfProducts(AstNode ast, int row, int col, int sign = +1)
+        {
+            if (ast is BinaryOperationNode binOpNd)
             {
-                char c = s[++pos];
-                switch(state)
+                if (binOpNd.Operator == TokenType.add)
                 {
-                    case ParseState.started:
-                        if (c == '+')
-                        {
-                            sign = +1;
-                            state = ParseState.name;
-                        }
-                        else if (c == '-')
-                        {
-                            sign = -1;
-                            state = ParseState.name;
-                        }
-                        else if (c == 'p')
-                        {
-                            state = ParseState.row;
-                        }
-                        else if (c == ' ')
-                        {
-                            state = ParseState.finished;
-                        }
-                        else
-                        {
-                            Fatal($"Unexpected char in Yacas sum: {c}");
-                        }
-                        break;
-                    case ParseState.name:
-                        Check(c == 'p', "Unexpected char {c} != p in Yacas sum-of-products");
-                        product = 0;
-                        state = ParseState.row;
-                        break;
-                    case ParseState.row:
-                        if ("0123456789".IndexOf(c) >= 0)
-                        {
-                            product = 10 * product + (c - '0');
-                        }
-                        else
-                        {
-                            litArrayD[row, col, product] = sign;
-                            goto case ParseState.started;
-                        }
-                        break;
-                    default:
-                        Fatal("Unexpected parse state in Yacas sum-of-products");
-                        break;
+                    ReadYacasSumOfProducts(binOpNd.Left, row, col, sign);
+                    ReadYacasSumOfProducts(binOpNd.Right, row, col, sign);
                 }
+                else if (binOpNd.Operator == TokenType.subtract)
+                {
+                    ReadYacasSumOfProducts(binOpNd.Left, row, col, sign);
+                    ReadYacasSumOfProducts(binOpNd.Right, row, col, -sign);
+                }
+                else if (binOpNd.Operator == TokenType.times)
+                {
+                    ComplexNode factor = binOpNd.Left as ComplexNode;
+                    VariableNode variable = binOpNd.Right as VariableNode;
+
+                    Check(factor != null, $"Expected ComplexNode as Left, got {binOpNd.GetType()}");
+                    Check(variable != null, "Expected VariableNode as Right");
+                    Check(variable.Name.StartsWith($"p"), "Unexpected product name");
+                    Coefficient value = sign * factor.Value;
+                    litArrayD[row, col, variable.Product] = value;
+                }
+                else
+                {
+                    Fatal($"Unexpected binOp operator {binOpNd.Operator}");
+                }
+            }
+            else if (ast is UnaryOperationNode unaryOpNd)
+            {
+                Check(unaryOpNd.Operator == TokenType.subtract, "Unexpected unary operator");
+
+                ReadYacasSumOfProducts(unaryOpNd.Right, row, col, -sign);
+            }
+            else if (ast is VariableNode variable)
+            {
+                Check(variable.Name.StartsWith($"p"), "Unexpected product");
+                litArrayD[row, col, variable.Product] = sign;
+            }
+            else
+            {
+                Fatal($"Unexpected AST node type {ast.GetType()}");
             }
         }
 
-        private static void ReadYacasProduct(string s)
+        private static void ReadYacasProduct(string s, int lineCount)
         {
             int eq = s.IndexOf('=');
-            int times = s.IndexOf('*');
 
             Check(eq > 0, "No '=' in Yacas product line: " + s);
-            Check(times > 0, "No '*' in Yacas product line: " + s);
 
             string sp = s.Substring(0, eq).Replace(":", "").Replace(" ", "").Replace("p", "");
 
             Check(IsNumeric(sp), "Numeric product identifier expected: " + s);
 
             int k = atoi(sp);
-            Check((k > 0) && (k < 999), "Unexpected product index outside [1..999]: " + s);
+            Check(k == noOfProducts + 1, $"Unexpected product index != {noOfProducts + 1}: " + s);
+            noOfProducts++;
 
-            string sa = s.Substring(eq + 1, times - eq - 1);
-            ReadYacasSum(sa, k, 'a', litArrayF);
+            s = s.Substring(eq + 1);
+            AstNode ast = parser.Parse(s, lineCount);
 
-            string sb = s.Substring(times + 1);
-            ReadYacasSum(sb, k, 'b', litArrayG);
+            Check(ast != null, $"No/Invalid expression in line {lineCount}");
+            BinaryOperationNode binaryOp = ast as BinaryOperationNode;
+            Check((binaryOp != null) &&
+                  (binaryOp.Operator == TokenType.times) &&
+                  (binaryOp.Right != null) &&
+                  (binaryOp.Left != null),
+                  $"Expected expression in line {lineCount} to start with factor");
+
+            ReadYacasSum(binaryOp.Left, F, k);
+
+            ReadYacasSum(binaryOp.Right, G, k);
         }
 
-        private static Regex rg = null;
-        private static string[] GetABCOps(string s)
+        private static AstNode[] ParseABCOps(string s, int lineCount)
         {
-            string[] a = null;
+            // s = "((0.5 + 0.5j)*a11 + (0.5 + 0.5j)*a12 + (0.5 - 0.5j)*a21)";
+            // s = "((0.5 + 0.5j)*a11)*b11*c11";
+            // s = "";
+            // s = "(0.5*a12 - 0.5*a14 - 0.5*a22 + 0.5*a24)*(0.5*b11 + 0.5*b12 + 0.5*b13 - 0.5*b14 + 0.5*b21 + 0.5*b22 - 0.5*b23 + 0.5*b24 - b35 - b42 + b43 - b45)*(- c22 - 0.5*c52)";
+            // s = "(- a11 - a15 + a25)*(- b15 - b16 - b21 + b36 - b46 - b52 + b53 + b55 + b56)*(c21 - c41 + c61 + c62)\r\n";
+            AstNode ast = parser.Parse(s, lineCount);
 
-            if (rg == null)
-            {
-                //  two alternatives:
-                //  either a single literal with optional +/- sign
-                //  or a term in (..)
-                string pattern = @"([+-]?[a-c]\d\d|\([^)]+\))";
-                rg = new Regex(pattern);
-            }
-
-            //  https://learn.microsoft.com/en-us/dotnet/api/system.text.regularexpressions.regex.match?view=net-9.0
-            Match m = rg.Match(s);
-            List<string> list = [];
-            while (m.Success)
-            {
-                Group g = m.Groups[1];
-                list.Add(g.Value);
-                m = m.NextMatch();
-            }
-
-            if (list.Count == 3)
-            {
-                a = [.. list];
-            }
-
-            return a;
+            Check(ast != null, $"No/Invalid expression in line {lineCount}");
+            BinaryOperationNode binaryOp = ast as BinaryOperationNode;
+            Check((binaryOp != null) &&
+                  (binaryOp.Operator == TokenType.times) &&
+                  (binaryOp.Left != null),
+                  $"Expected expression in line {lineCount} to start with factor");
+            BinaryOperationNode binaryOp2 = binaryOp.Left as BinaryOperationNode;
+            Check((binaryOp2 != null) &&
+                  (binaryOp2.Operator == TokenType.times) &&
+                  (binaryOp2.Left != null) &&
+                  (binaryOp2.Right != null),
+                  $"Expected expression in line {lineCount} to have factor the middle");
+            return [binaryOp2.Left, binaryOp2.Right, binaryOp.Right];
         }
 
-        private static void ReadTensorLine(string s, int product)
+        private static void ReadTensorLine(string line, int product, int lineCount)
         {
-            string[] sarr;
-            string tpl = " tensor product line: " + s;
+            AstNode[] sarr = [];
+            string tpl = " tensor product line: " + line;
 
             //  count '*'
-            int asterisks = s.Count(c => c == '*');
-            int opens = s.Count(c => c == '(');
-            int closes = s.Count(c => c == ')');
+            int opens = line.Count(c => c == '(');
+            int closes = line.Count(c => c == ')');
 
-            if (asterisks == 2)
-            {
-                sarr = s.Split(['*'], StringSplitOptions.RemoveEmptyEntries);
-                Check(sarr.Length == 3, "Unexpected" + tpl);
-            }
-            else
-            //  format without '*'
-            {
-                Check(asterisks == 0, "Expected 0 or 2 '*'" + tpl);
-                Check(opens == closes, "Unbalanced brackets" + tpl);
+            Check(opens == closes, "Unbalanced brackets" + tpl);
 
-                sarr = GetABCOps(s);
+            sarr = ParseABCOps(line, lineCount);
+            Check(sarr.Length == Fgd_all.Length, "Expected 3 parts in" + tpl);
 
-            }
+            Check((product > 0) && (product < 999), "Unexpected product index outside [1..999]: " + line);
 
-            Check((product > 0) && (product < 999), "Unexpected product index outside [1..999]: " + s);
+            ReadYacasSum(sarr[F], F, product);
 
-            ReadYacasSum(sarr[0], product, 'a', litArrayF);
+            ReadYacasSum(sarr[G], G, product);
 
-            ReadYacasSum(sarr[1], product, 'b', litArrayG);
-
-            ReadYacasSum(sarr[2], product, 'c', litArrayD, transposed: true);
+            ReadYacasSum(sarr[D], D, product, transposed: true);
         }
 
-        private static void ReadYacasSum(string s, int product, char litName, DynArray3D<int> litArray, 
-                                         bool transposed = false)
+        private static void ReadYacasSum(AstNode ast, int fgd, int product, 
+                                 bool transposed = false, int sign = +1)
         {
-            ParseState state = ParseState.started;
-            int pos = -1;
-            int row = 0;
-            int sign = +1;
-
-            s = s.Replace("(", "").Replace(")", "").Replace(" ", "").Replace(";", "");
-
-            while (state != ParseState.finished)
+            if (ast is BinaryOperationNode binOpNd)
             {
-                char c = s[++pos];
-                switch (state)
+                if (binOpNd.Operator == TokenType.add)
                 {
-                    case ParseState.started:
-                        if (c == '+')
-                        {
-                            sign = +1;
-                            state = ParseState.name;
-                        }
-                        else if (c == '-')
-                        {
-                            sign = -1;
-                            state = ParseState.name;
-                        }
-                        else if (c == litName)
-                        {
-                            state = ParseState.row;
-                        }
-                        else
-                        {
-                            Fatal($"Unexpected char in Yacas sum: {c}");
-                        }
-                        break;
-                    case ParseState.name:
-                        Check(c == litName, $"Unexpected char {c} != {litName} in Yacas sum");
-                        state = ParseState.row;
-                        break;
-                    case ParseState.row:
-                        Check("0123456789".IndexOf(c) >= 0, "Expected digit in Yacas sum: " + c);
-                        row = (int)c - (int)'0';
-                        state = ParseState.col;
-                        break;
-                    case ParseState.col:
-                        Check("0123456789".IndexOf(c) >= 0, "Expected digit in Yacas sum: " + c);
-                        int col = (int)c - (int)'0';
-                        if (transposed)
-                        {
-                            litArray[col, row, product] = sign;
-                        }
-                        else
-                        {
-                            litArray[row, col, product] = sign;
-                        }
-                        state = (pos == s.Length - 1) ? ParseState.finished : ParseState.started;
-                        break;
-                    default:
-                        Fatal("Unexpected parse state in Yacas sum");
-                        break;
+                    ReadYacasSum(binOpNd.Left, fgd, product, transposed, sign);
+                    ReadYacasSum(binOpNd.Right, fgd, product, transposed, sign);
                 }
+                else if (binOpNd.Operator == TokenType.subtract)
+                {
+                    ReadYacasSum(binOpNd.Left, fgd, product, transposed, sign);
+                    ReadYacasSum(binOpNd.Right, fgd, product, transposed, -sign);
+                }
+                else if (binOpNd.Operator == TokenType.times)
+                {
+                    ComplexNode factor = binOpNd.Left as ComplexNode;
+                    VariableNode variable = binOpNd.Right as VariableNode;
+
+                    Check(factor != null, $"Expected ComplexNode as Left, got {binOpNd.GetType()}");
+                    Check(variable != null, "Expected VariableNode as Right");
+                    Check(variable.Name.StartsWith($"{coefficientName[fgd]}"), "Unexpected variable name");
+                    Coefficient value = sign * factor.Value;
+                    if (transposed)
+                    {
+                        litArrays[fgd][variable.Col, variable.Row, product] = value;
+                    }
+                    else
+                    {
+                        litArrays[fgd][variable.Row, variable.Col, product] = value;
+                    }
+                }
+                else
+                {
+                    Fatal($"Unexpected binOp operator {binOpNd.Operator}");
+                }
+            }
+            else if (ast is UnaryOperationNode unaryOpNd)
+            {
+                Check(unaryOpNd.Operator == TokenType.subtract, "Unexpected unary operator");
+
+                ReadYacasSum(unaryOpNd.Right, fgd, product, transposed, -sign);
+            }
+            else if (ast is VariableNode variable)
+            {
+                Check(variable.Name.StartsWith($"{coefficientName[fgd]}"), "Unexpected variable name");
+                if (transposed)
+                {
+                    litArrays[fgd][variable.Col, variable.Row, product] = sign;
+                }
+                else
+                {
+                    litArrays[fgd][variable.Row, variable.Col, product] = sign;
+                }
+            }
+            else
+            {
+                Fatal($"Unexpected AST node type {ast.GetType()}");
             }
         }
 
@@ -873,8 +866,8 @@ namespace akExtractMatMultSolution
                         Assert(v.EndsWith(")"));
                         Assert("fgd".IndexOf(v[0]) >= 0);
 
-                        int row = v[2] - '0';
-                        int col = v[4] - '0';
+                        int row = ExtractInt(v, offset: 2, length: 1);
+                        int col = ExtractInt(v, offset: 4, length: 1);
                         string t = v.Replace(")", "").Substring(6);
 
                         int k = atoi(t);
@@ -921,9 +914,9 @@ namespace akExtractMatMultSolution
         {
             string[] a = Tokenize(s);
 
-            Check((a.Length == 3) && a[1].Equals("="), 
+            Check((a.Length == 3) && a[1].Equals("="),
                   $"3 fields with '=' as 2nd expected: '{s}'");
-            Check((a[0].Length == 4) || (a[0].Length == 7), 
+            Check((a[0].Length == 4) || (a[0].Length == 7),
                   $"Literal name expected with 4 or 7 chars: '{s}'");
 
             int row = atoi(a[0].Substring(1, 1));
@@ -948,9 +941,9 @@ namespace akExtractMatMultSolution
             }
 
             string v = a[2];
-            Check((v == "0") || (v == "1") || (v == "-1"), 
+            Check((v == "0") || (v == "1") || (v == "-1"),
                   $"Unexpected value {v} for {a[0]}. 0, 1 or -1 expected");
-            int val = atoi(v);
+            Coefficient val = new(v);
 
             char c1 = char.ToUpper(a[0][0]);
 
@@ -958,67 +951,67 @@ namespace akExtractMatMultSolution
             {
                 if (c1 == 'F')
                 {
-                    Check(litArrayF[row, col, k] == undefined, 
+                    Check(litArrayF[row, col, k] == undefined,
                           "Multiple definitions for " + Literal("F", row, col, k));
                     litArrayF[row, col, k] = val;
-                    Check(litArrayF[row, col, k] == val, 
+                    Check(litArrayF[row, col, k] == val,
                           "Cannot store literal value F");
                     Debug.WriteLine($"F{row}{col}{k} = {val}");
                 }
                 else if (c1 == 'G')
                 {
-                    Check(litArrayG[row, col, k] == undefined, 
+                    Check(litArrayG[row, col, k] == undefined,
                           "Multiple definitions for " + Literal("G", row, col, k));
                     litArrayG[row, col, k] = val;
-                    Check(litArrayG[row, col, k] == val, 
+                    Check(litArrayG[row, col, k] == val,
                           "Cannot store literal value G");
                     Debug.WriteLine($"G{row}{col}{k} = {val}");
                 }
                 else if (c1 == 'D')
                 {
-                    Check(litArrayD[row, col, k] == undefined, 
+                    Check(litArrayD[row, col, k] == undefined,
                           "Multiple definitions for " + Literal("D", row, col, k));
                     litArrayD[row, col, k] = val;
-                    Check(litArrayD[row, col, k] == val, 
+                    Check(litArrayD[row, col, k] == val,
                           "Cannot store literal value D");
                     Debug.WriteLine($"D{row}{col}{k} = {val}");
                 }
             }
             else
             {
-                Check((val == 0) || (val == 1), 
+                Check((val == 0) || (val == 1),
                       $"Inconsistent value {val} for revised solution. 0 or 1 expected");
 
                 if (c1 == 'F')
                 {
-                    Check(litArrayF[row, col, k] != undefined, 
+                    Check(litArrayF[row, col, k] != undefined,
                           "Missing mod2 definition for " + Literal("F", row, col, k));
                     val = litArrayF[row, col, k] * (2 * val - 1);
                     litArrayF[row, col, k] = val;
-                    Check(litArrayF[row, col, k] == val, 
+                    Check(litArrayF[row, col, k] == val,
                           "Cannot store literal value F");
                     Debug.WriteLine($"F{row}{col}{k} = {val}");
                 }
                 else if (c1 == 'G')
                 {
-                    Check(litArrayG[row, col, k] != undefined, 
+                    Check(litArrayG[row, col, k] != undefined,
                           "Missing mod2 definition for " + Literal("G", row, col, k));
                     val = litArrayG[row, col, k] * (2 * val - 1);
                     litArrayG[row, col, k] = val;
-                    Check(litArrayG[row, col, k] == val, 
+                    Check(litArrayG[row, col, k] == val,
                           "Cannot store literal value G");
                     Debug.WriteLine($"G{row}{col}{k} = {val}");
                 }
                 else if (c1 == 'D')
                 {
-                    Check(litArrayD[row, col, k] != undefined, 
+                    Check(litArrayD[row, col, k] != undefined,
                           "Missing mod2 definition for " + Literal("D", row, col, k));
                     val = litArrayD[row, col, k] * (2 * val - 1);
                     litArrayD[row, col, k] = val;
-                    Check(litArrayD[row, col, k] == val, 
+                    Check(litArrayD[row, col, k] == val,
                           "Cannot store literal value D");
                     Debug.WriteLine($"D{row}{col}{k} = {val}");
-                    Check(!transposedMode || (row <= col), 
+                    Check(!transposedMode || (row <= col),
                           $"Inconsistent element {s} for transposed mode");
                 }
             }
@@ -1074,104 +1067,101 @@ namespace akExtractMatMultSolution
                 //  write odd equations in phase 0, even equations in phase 1
                 for (int phase = 0; phase < 2; phase++)
                 {
-                    for (int ra = 1; ra <= aRows; ra++)
-                        for (int ca = 1; ca <= aCols; ca++)
-                            for (int rb = 1; rb <= bRows; rb++)
-                                for (int cb = 1; cb <= bCols; cb++)
-                                    for (int rc = 1; rc <= cRows; rc++)
-                                        for (int cc = 1; cc <= cCols; cc++)
+                    foreach ((int ra, int ca) in AIndices)
+                        foreach ((int rb, int cb) in BIndices)
+                            foreach ((int rc, int cc) in CIndices)
+                            {
+                                bool odd = (ra == rc) && (ca == rb) && (cc == cb);
+                                string sep = "";
+
+                                if (transposedMode && (rc > cc))
+                                {
+                                    continue;
+                                }
+
+                                if ((phase == 0) == odd)
+                                {
+                                    s = $"{ra}{ca}{rb}{cb}{rc}{cc}: ";
+                                    Coefficient sum = 0;
+                                    int nonZeroTriples = 0;
+
+                                    foreach (int k in Products)
+                                    {
+                                        int t = productOrder[k - 1];
+
+                                        Coefficient F = litArrayF[ra, ca, t];
+                                        Coefficient G = litArrayG[rb, cb, t];
+                                        Coefficient D = litArrayD[rc, cc, t];
+                                        Coefficient T = F * G * D;
+
+                                        s += sep;
+                                        sep = "+";
+
+                                        if (algorithmMode == AlgorithmMode.FullBrent)
                                         {
-                                            bool odd = (ra == rc) && (ca == rb) && (cc == cb);
-                                            string sep = "";
+                                            string fgd = SignedString(F) + "*"
+                                                       + SignedString(G) + "*"
+                                                       + SignedString(D);
 
-                                            if (transposedMode && (rc > cc))
+                                            s += (T != 0) ? $"[{fgd}]" : $" {fgd} ";
+                                        }
+                                        else
+                                        {
+                                            s += (T != 0) ? "[111]" : $" {F}{G}{D} ";
+                                        }
+
+                                        if (T != 0)
+                                        {
+                                            nonZeroTriples++;
+
+                                            if (odd)
                                             {
-                                                continue;
+                                                nonZeroOddTriples[k - 1]++;
                                             }
-
-                                            if ((phase == 0) == odd)
+                                            else
                                             {
-                                                s = $"{ra}{ca}{rb}{cb}{rc}{cc}: ";
-                                                int sum = 0;
-                                                int nonZeroTriples = 0;
-
-                                                foreach (int k in Products)
-                                                {
-                                                    int t = productOrder[k - 1];
-
-                                                    int F = litArrayF[ra, ca, t];
-                                                    int G = litArrayG[rb, cb, t];
-                                                    int D = litArrayD[rc, cc, t];
-                                                    int T = F * G * D;
-
-                                                    s += sep;
-                                                    sep = "+";
-
-                                                    if (algorithmMode == AlgorithmMode.FullBrent)
-                                                    {
-                                                        string fgd = SignedIntString(F) + "*" 
-                                                                   + SignedIntString(G) + "*" 
-                                                                   + SignedIntString(D);
-
-                                                        s += (T != 0) ? $"[{fgd}]" : $" {fgd} ";
-                                                    }
-                                                    else
-                                                    {
-                                                        s += (T != 0) ? "[111]" : $" {F}{G}{D} ";
-                                                    }
-
-                                                    if (T != 0)
-                                                    {
-                                                        nonZeroTriples++;
-
-                                                        if (odd)
-                                                        {
-                                                            nonZeroOddTriples[k - 1]++;
-                                                        }
-                                                        else
-                                                        {
-                                                            nonZeroEvenTriples[k - 1]++;
-                                                        }
-                                                    }
-
-                                                    sum += T;
-                                                }
-
-                                                s += " = " + sum;
-
-                                                if (algorithmMode == AlgorithmMode.FullBrent)
-                                                {
-                                                    if ((sum == 1) != odd)
-                                                    {
-                                                        s += " != " + (odd ? "1" : "0");
-                                                        errors++;
-                                                    }
-                                                    else
-                                                    {
-                                                        correctEquations++;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    if (((sum % 2) == 1) != odd)
-                                                    {
-                                                        s += " != " + (odd ? "1" : "0");
-                                                        errors++;
-                                                    }
-                                                    else
-                                                    {
-                                                        correctEquations++;
-                                                    }
-                                                }
-
-                                                if (nonZeroTriples > 0)
-                                                {
-                                                    s += " " + nonZeroTriples + "x";
-                                                }
-
-                                                o(s);
+                                                nonZeroEvenTriples[k - 1]++;
                                             }
                                         }
+
+                                        sum += T;
+                                    }
+
+                                    s += " = " + sum;
+
+                                    if (algorithmMode == AlgorithmMode.FullBrent)
+                                    {
+                                        if ((sum == 1) != odd)
+                                        {
+                                            s += " != " + (odd ? "1" : "0");
+                                            errors++;
+                                        }
+                                        else
+                                        {
+                                            correctEquations++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if ((((int)sum % 2) == 1) != odd)
+                                        {
+                                            s += " != " + (odd ? "1" : "0");
+                                            errors++;
+                                        }
+                                        else
+                                        {
+                                            correctEquations++;
+                                        }
+                                    }
+
+                                    if (nonZeroTriples > 0)
+                                    {
+                                        s += " " + nonZeroTriples + "x";
+                                    }
+
+                                    o(s);
+                                }
+                            }
                 }
 
                 //  write footer
@@ -1220,7 +1210,7 @@ namespace akExtractMatMultSolution
             o("");
         }
 
-        private static string SignedIntString(int f)
+        private static string SignedString(Coefficient f)
         {
             return ((f < 0) ? "" : " ") + f;
         }
@@ -1271,13 +1261,13 @@ namespace akExtractMatMultSolution
         {
             string s = "";
 
-            for (int ra = 1; ra <= aRows; ra++)
-                for (int ca = 1; ca <= aCols; ca++)
-                    for (int cb = 1; cb <= bCols; cb++)
+            foreach (int ra in ARows)
+                foreach (int ca in ACols)
+                    foreach (int cb in BCols)
                     {
-                        int F = litArrayF[ra, ca, k];
-                        int G = litArrayG[ca, cb, k];
-                        int D = litArrayD[ra, cb, k];
+                        Coefficient F = litArrayF[ra, ca, k];
+                        Coefficient G = litArrayG[ca, cb, k];
+                        Coefficient D = litArrayD[ra, cb, k];
 
                         //  we ignore the sign
                         s += (F * G * D == 0) ? '0' : '1';
@@ -1300,6 +1290,11 @@ namespace akExtractMatMultSolution
             {
                 fOut = sw;
 
+                o($"/* eXmm {BuildDate()} Brent Equation detail graph file");
+                o($"   File: {graphvizDetailFileName}");
+                o($"   Created: {Timestamp()}");
+                o(" ---------------------------------------------------------------------  */");
+                o("");
                 o("graph BrentGraph {");
 
                 o("size=\"8,12\";");
@@ -1322,34 +1317,30 @@ namespace akExtractMatMultSolution
                     o($"  label=\"#{k} {(char)('a' + k - 1)}\";");
 
                     for (int phase = 0; phase < 2; phase++)
-                        for (int ra = 1; ra <= aRows; ra++)
-                            for (int ca = 1; ca <= aCols; ca++)
-                                for (int rb = 1; rb <= bRows; rb++)
-                                    for (int cb = 1; cb <= bCols; cb++)
-                                        for (int rc = 1; rc <= cRows; rc++)
-                                            for (int cc = 1; cc <= cCols; cc++)
-                                            {
+                        foreach ((int ra, int ca) in AIndices)
+                            foreach ((int rb, int cb) in BIndices)
+                                foreach ((int rc, int cc) in CIndices)
+                                {
+                                    Coefficient F = litArrayF[ra, ca, k];
+                                    Coefficient G = litArrayG[rb, cb, k];
+                                    Coefficient D = litArrayD[rc, cc, k];
 
-                                                int F = litArrayF[ra, ca, k];
-                                                int G = litArrayG[rb, cb, k];
-                                                int D = litArrayD[rc, cc, k];
-
-                                                if (F * G * D != 0)
-                                                {
-                                                    bool odd = (ra == rc) && (ca == rb) && (cc == cb);
-                                                    //  show odd triples first
-                                                    if (odd == (phase == 0))
-                                                    {
-                                                        char c = ProductChar(k);
-                                                        string t = $"t{ra}{ca}{rb}{cb}{rc}{cc}{c}";
-                                                        string label = odd ? $"{ra}{ca}{cb}" : $"{ra}{ca}{rb}{cb}{rc}{cc}";
-                                                        string shape = odd ? "diamond,color=red" : "box";
-                                                        o($"  {t}[shape={shape},label=\"{label}\"];");
-                                                        oddTriples += odd ? 1 : 0;
-                                                        evenTriples += odd ? 0 : 1;
-                                                    }
-                                                }
-                                            }
+                                    if (F * G * D != 0)
+                                    {
+                                        bool odd = (ra == rc) && (ca == rb) && (cc == cb);
+                                        //  show odd triples first
+                                        if (odd == (phase == 0))
+                                        {
+                                            char c = ProductChar(k);
+                                            string t = $"t{ra}{ca}{rb}{cb}{rc}{cc}{c}";
+                                            string label = odd ? $"{ra}{ca}{cb}" : $"{ra}{ca}{rb}{cb}{rc}{cc}";
+                                            string shape = odd ? "diamond,color=red" : "box";
+                                            o($"  {t}[shape={shape},label=\"{label}\"];");
+                                            oddTriples += odd ? 1 : 0;
+                                            evenTriples += odd ? 0 : 1;
+                                        }
+                                    }
+                                }
                     o($"  /*  {oddTriples + evenTriples} triples, {oddTriples} odd, {evenTriples} even  */");
                     o("}");
                     o("");
@@ -1358,23 +1349,20 @@ namespace akExtractMatMultSolution
                 //  count number of non-zero triples per product
                 int[] nzCount = new int[noOfProducts];
 
-                for (int ra = 1; ra <= aRows; ra++)
-                    for (int ca = 1; ca <= aCols; ca++)
-                        for (int rb = 1; rb <= bRows; rb++)
-                            for (int cb = 1; cb <= bCols; cb++)
-                                for (int rc = 1; rc <= cRows; rc++)
-                                    for (int cc = 1; cc <= cCols; cc++)
-                                        foreach (int k in Products)
-                                        {
-                                            int F = litArrayF[ra, ca, k];
-                                            int G = litArrayG[rb, cb, k];
-                                            int D = litArrayD[rc, cc, k];
+                foreach ((int ra, int ca) in AIndices)
+                    foreach ((int rb, int cb) in BIndices)
+                        foreach ((int rc, int cc) in CIndices)
+                            foreach (int k in Products)
+                            {
+                                Coefficient F = litArrayF[ra, ca, k];
+                                Coefficient G = litArrayG[rb, cb, k];
+                                Coefficient D = litArrayD[rc, cc, k];
 
-                                            if (F * G * D != 0)
-                                            {
-                                                nzCount[k - 1]++;
-                                            }
-                                        }
+                                if (F * G * D != 0)
+                                {
+                                    nzCount[k - 1]++;
+                                }
+                            }
 
                 int[] kOrder = Range(1, noOfProducts);
 
@@ -1392,41 +1380,38 @@ namespace akExtractMatMultSolution
 
                 o("/*  --------------------  edges  --------------------------  */");
 
-                for (int ra = 1; ra <= aRows; ra++)
-                    for (int ca = 1; ca <= aCols; ca++)
-                        for (int rb = 1; rb <= bRows; rb++)
-                            for (int cb = 1; cb <= bCols; cb++)
-                                for (int rc = 1; rc <= cRows; rc++)
-                                    for (int cc = 1; cc <= cCols; cc++)
+                foreach ((int ra, int ca) in AIndices)
+                    foreach ((int rb, int cb) in BIndices)
+                        foreach ((int rc, int cc) in CIndices)
+                        {
+                            string prev = "";
+
+                            foreach (int k in kOrder)
+                            {
+                                //  products with many non-zero triples come first
+                                Coefficient F = litArrayF[ra, ca, k];
+                                Coefficient G = litArrayG[rb, cb, k];
+                                Coefficient D = litArrayD[rc, cc, k];
+
+                                if (F * G * D != 0)
+                                {
+                                    char c = ProductChar(k);
+                                    string t = $"t{ra}{ca}{rb}{cb}{rc}{cc}{c}";
+
+                                    if (prev == "")
                                     {
-                                        string prev = "";
-
-                                        foreach (int k in kOrder)
-                                        {
-                                            //  products with many non-zero triples come first
-                                            int F = litArrayF[ra, ca, k];
-                                            int G = litArrayG[rb, cb, k];
-                                            int D = litArrayD[rc, cc, k];
-
-                                            if (F * G * D != 0)
-                                            {
-                                                char c = ProductChar(k);
-                                                string t = $"t{ra}{ca}{rb}{cb}{rc}{cc}{c}";
-
-                                                if (prev == "")
-                                                {
-                                                    prev = t;
-                                                }
-                                                else
-                                                {
-                                                    bool odd = (ra == rc) && (ca == rb) && (cb == cc);
-                                                    string style = odd ? " [ penwidth=2.0, color=red ]"
-                                                                       : " [ penwidth=0.75, color=black ]";
-                                                    o($"  {prev} -- {t}{style}");
-                                                }
-                                            }
-                                        }
+                                        prev = t;
                                     }
+                                    else
+                                    {
+                                        bool odd = (ra == rc) && (ca == rb) && (cb == cc);
+                                        string style = odd ? " [ penwidth=2.0, color=red ]"
+                                                           : " [ penwidth=0.75, color=black ]";
+                                        o($"  {prev} -- {t}{style}");
+                                    }
+                                }
+                            }
+                        }
 
                 o("}");
             }
@@ -1454,37 +1439,33 @@ namespace akExtractMatMultSolution
                 oddTriples[k - 1] = [];
             }
 
-            for (int ra = 1; ra <= aRows; ra++)
-                for (int ca = 1; ca <= aCols; ca++)
-                    for (int rb = 1; rb <= bRows; rb++)
-                        for (int cb = 1; cb <= bCols; cb++)
-                            for (int rc = 1; rc <= cRows; rc++)
-                                for (int cc = 1; cc <= cCols; cc++)
-                                    foreach (int k in Products)
-                                    {
+            foreach ((int ra, int ca) in AIndices)
+                foreach ((int rb, int cb) in BIndices)
+                    foreach ((int rc, int cc) in CIndices)
+                        foreach (int k in Products)
+                        {
+                            Coefficient F = litArrayF[ra, ca, k];
+                            Coefficient G = litArrayG[rb, cb, k];
+                            Coefficient D = litArrayD[rc, cc, k];
 
-                                        int F = litArrayF[ra, ca, k];
-                                        int G = litArrayG[rb, cb, k];
-                                        int D = litArrayD[rc, cc, k];
+                            if (F * G * D != 0)
+                            {
+                                bool odd = (ra == rc) && (ca == rb) && (cc == cb);
 
-                                            if (F * G * D != 0)
-                                            {
-                                                bool odd = (ra == rc) && (ca == rb) && (cc == cb);
+                                if (odd)
+                                {
+                                    string t = $"t{ra}{ca}{cb}";
 
-                                                if (odd)
-                                                {
-                                                    string t = $"t{ra}{ca}{cb}";
+                                    oddTriples[k - 1].Add(t);
+                                }
+                                else
+                                {
+                                    string t = $"t{ra}{ca}{rb}{cb}{rc}{cc}";
 
-                                                    oddTriples[k - 1].Add(t);
-                                                }
-                                                else
-                                                {
-                                                    string t = $"t{ra}{ca}{rb}{cb}{rc}{cc}";
-
-                                                    evenTriples[k - 1].Add(t);
-                                                }
-                                            }
-                                    }
+                                    evenTriples[k - 1].Add(t);
+                                }
+                            }
+                        }
 
 
             using (StreamWriter sw = OpenWriter(graphvizFileName, "GraphViz script"))
@@ -1567,6 +1548,17 @@ namespace akExtractMatMultSolution
             return " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[k];
         }
 
+        static void SetBrentEquationsFileName(string[] args, int argNo = 3)
+        {
+            brentEquationFileName = (args.Length > argNo) ? args[argNo] : "none";
+
+            if (brentEquationFileName == "auto")
+            {
+                string problem = $"s{Signature()}";
+                brentEquationFileName = $"{problem}.brent.txt";
+            }
+
+        }
         static void WriteYacasSolution(string[] args)
         {
             string fileName = "";
@@ -1575,34 +1567,34 @@ namespace akExtractMatMultSolution
             if (args[0].Equals("--gringo") || args[0].Equals("--bini"))
             {
                 fileName = (args.Length > 2) ? args[2] : $"{problem}.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
             }
             else if (args[0].Equals("--yacas"))
             {
                 fileName = (args.Length > 2) ? args[2] : $"{problem}.new.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
             }
             else if (args[0].Equals("--cse"))
             {
                 simplifiedSolutionFileName = (args.Length > 2) ? args[2] : $"{problem}.simplified.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
             }
             else if (args[0].Equals("--tensor"))
             {
                 fileName = (args.Length > 2) ? args[2] : $"{problem}.new.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
             }
             else if (args[0].Equals("--graph"))
             {
                 brentEquationFileName = "";
                 graphvizDetailFileName = (args.Length > 2) ? args[2] : $"{problem}.gvdot";
                 graphvizOverviewFileName = (args.Length > 3) ? args[3] : $"{problem}.overview.gvdot";
-                productReportFileName = (args.Length > 4) ? args[4] : $"{problem}.products.txt";
+                SetBrentEquationsFileName(args, 4);
             }
             else if (args[0].Equals("--sat"))
             {
                 fileName = (args.Length > 3) ? args[3] : $"{problem}.txt";
-                brentEquationFileName = (args.Length > 4) ? args[4] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args, 4);
             }
             else if (args[0].Equals("--reduce"))
             {
@@ -1612,36 +1604,40 @@ namespace akExtractMatMultSolution
             else if (args[0].Equals("--binigen"))
             {
                 biniFileName = (args.Length > 2) ? args[2] : $"{problem}.bini.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
                 return;
             }
             else if (args[0].Equals("--tensorgen"))
             {
                 tensorFileName = (args.Length > 2) ? args[2] : $"{problem}.tensor.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
                 return;
             }
             else if (args[0].Equals("--literals"))
             {
                 solutionFileName = (args.Length > 2) ? args[2] : $"{problem}.akb.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
                 return;
             }
             else if (args[0].Equals("--contrib"))
             {
                 productContributionsFileName = (args.Length > 2) ? args[2] : $"{problem}.contrib.txt";
-                brentEquationFileName = (args.Length > 3) ? args[3] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args);
                 return;
             }
             else if (args[0].Equals("--combine"))
             {
                 fileName = (args.Length > 3) ? args[3] : $"{problem}.txt";
-                brentEquationFileName = (args.Length > 4) ? args[4] : $"{problem}.combined.brent.txt";
+                brentEquationFileName = (args.Length > 4) ? args[4] : "none";
+                if (brentEquationFileName == "auto")
+                {
+                    brentEquationFileName = $"{problem}.combined.brent.txt";
+                }
             }
             else
             {
                 fileName = (args.Length > 1) ? args[1] : $"{problem}.txt";
-                brentEquationFileName = (args.Length > 2) ? args[2] : $"{problem}.brent.txt";
+                SetBrentEquationsFileName(args, 2);
             }
 
             if (fileName == "")
@@ -1659,7 +1655,10 @@ namespace akExtractMatMultSolution
                 fOut = sw;
 
                 o("#");
-                o($"# Yacas script '{fileName}' created " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss"));
+                o($"# Yacas script '{fileName}' for matrix multiplication");
+                o("#");
+                o("# eXmm " + BuildDate());
+                o("# Created: " + Timestamp());
                 o("#");
                 o("# Matrix multiplication method "
                     + (algorithmMode == AlgorithmMode.Mod2Brent ? "(mod 2!) " : "")
@@ -1672,7 +1671,7 @@ namespace akExtractMatMultSolution
                     o($"# Reduction signature: {reducedSignature}");
                     o("#");
 
-                    foreach(string sr in reduceResult)
+                    foreach (string sr in reduceResult)
                     {
                         o($"# {sr}");
                     }
@@ -1689,7 +1688,7 @@ namespace akExtractMatMultSolution
                 o("#");
 
                 //  try to minimize the number of '-' signs
-                //  BeautifyLiterals();
+                BeautifyLiterals();
 
                 foreach (int k in Products)
                 {
@@ -1702,15 +1701,17 @@ namespace akExtractMatMultSolution
                 }
 
                 o("");
-                for (int row = 1; row <= cRows; row++)
-                    for (int col = 1; col <= cCols; col++)
-                        if (!transposedMode || (row <= col))
-                        {
-                            s = $"c{row}{col} := ";
-                            s += GetSumOfProductsExtended(row, col);
-                            s += ";";
-                            o(s);
-                        }
+                int[] widths =
+                    [.. Range(1, noOfProducts).Select(GetProductWidth)];
+
+                foreach ((int row, int col) in CIndices)
+                    if (!transposedMode || (row <= col))
+                    {
+                        s = $"c{row}{col} := ";
+                        s += GetSumOfProductsExtended(row, col, widths);
+                        s += ";";
+                        o(s);
+                    }
 
                 o("");
 
@@ -1724,6 +1725,13 @@ namespace akExtractMatMultSolution
             o($"Algorithm  written to file '{fileName}'");
             o(bVerified ? "verified OK!" : "verification failed!!!");
             o("");
+        }
+
+        private static string SortedCoefficientList(HashSet<Coefficient> set)
+        {
+            IEnumerable<string> strings = set.Select(c => c.ToString()).OrderBy(c => c);
+
+            return string.Join(", ", strings);
         }
 
         private static void WriteYacasStatistics()
@@ -1741,6 +1749,19 @@ namespace akExtractMatMultSolution
             MinMax total_subs = new();
             int[] term0_cnt = new int[dim];
             int[] term1_cnt = new int[dim];
+            HashSet<Coefficient>[] coefficients = new HashSet<Coefficient>[dim];
+
+            foreach (int fgd in Fgd_all)
+            {
+                coefficients[fgd] = GetCoefficients(fgd);
+            }
+
+            o("#  Coefficients");
+            o("# ------------------------------------------------------");
+            o($"#  [a]: {SortedCoefficientList(coefficients[(int)Mat.F])}");
+            o($"#  [b]: {SortedCoefficientList(coefficients[(int)Mat.G])}");
+            o($"#  [c]: {SortedCoefficientList(coefficients[(int)Mat.D])}");
+            o("#");
 
             foreach (int fgd in Fgd_all)
                 foreach (int k in Products)
@@ -1767,7 +1788,7 @@ namespace akExtractMatMultSolution
             const int c = (int)Mat.D;
 
             const int w = 10; // column width
-            o($"#                 {"[a]",w} {"[b]",w} {"[c]",w} {"total",w}");
+            o($"#                  {"[a]",w} {"[b]",w} {"[c]",w} {"total",w}");
             o("# --------------------------------------------------------------");
             string sa = PrettyNum(ops[a].Sum);
             string sb = PrettyNum(ops[b].Sum);
@@ -1795,63 +1816,60 @@ namespace akExtractMatMultSolution
             int eqEven_cnt = 0;
             int product1_cnt = 0;
 
-            for (int ra = 1; ra <= aRows; ra++)
-                for (int ca = 1; ca <= aCols; ca++)
-                    for (int rb = 1; rb <= bRows; rb++)
-                        for (int cb = 1; cb <= bCols; cb++)
-                            for (int rc = 1; rc <= cRows; rc++)
-                                for (int cc = 1; cc <= cCols; cc++)
+            foreach ((int ra, int ca) in AIndices)
+                foreach ((int rb, int cb) in BIndices)
+                    foreach ((int rc, int cc) in CIndices)
+                    {
+                        bool odd = (ra == rc) && (ca == rb) && (cc == cb);
+
+                        if (transposedMode && (rc > cc))
+                        {
+                            continue;
+                        }
+
+                        int nonZeroTriples = 0;
+
+                        foreach (int k in Products)
+                        {
+                            Coefficient F = litArrayF[ra, ca, k];
+                            Coefficient G = litArrayG[rb, cb, k];
+                            Coefficient D = litArrayD[rc, cc, k];
+                            Coefficient T = F * G * D;
+
+                            if (T != 0)
+                            {
+                                nonZeroTriples++;
+
+                                if (odd)
                                 {
-                                    bool odd = (ra == rc) && (ca == rb) && (cc == cb);
-
-                                    if (transposedMode && (rc > cc))
-                                    {
-                                        continue;
-                                    }
-
-                                    int nonZeroTriples = 0;
-
-                                    foreach (int k in Products)
-                                    {
-                                        int F = litArrayF[ra, ca, k];
-                                        int G = litArrayG[rb, cb, k];
-                                        int D = litArrayD[rc, cc, k];
-                                        int T = F * G * D;
-
-                                        if (T != 0)
-                                        {
-                                            nonZeroTriples++;
-
-                                            if (odd)
-                                            {
-                                                nonZeroOddTriples[k - 1]++;
-                                            }
-                                            else
-                                            {
-                                                nonZeroEvenTriples[k - 1]++;
-                                            }
-                                        }
-                                    }
-
-                                    if (odd)
-                                    {
-                                        eqOddTriples.Register(nonZeroTriples);
-                                        if (nonZeroTriples == 1)
-                                        {
-                                            eqOdd1_cnt++;
-                                        }
-                                        eqOdd_cnt++;
-                                    }
-                                    else
-                                    {
-                                        eqEvenTriples.Register(nonZeroTriples);
-                                        if (nonZeroTriples == 0)
-                                        {
-                                            eqEven0_cnt++;
-                                        }
-                                        eqEven_cnt++;
-                                    }
+                                    nonZeroOddTriples[k - 1]++;
                                 }
+                                else
+                                {
+                                    nonZeroEvenTriples[k - 1]++;
+                                }
+                            }
+                        }
+
+                        if (odd)
+                        {
+                            eqOddTriples.Register(nonZeroTriples);
+                            if (nonZeroTriples == 1)
+                            {
+                                eqOdd1_cnt++;
+                            }
+                            eqOdd_cnt++;
+                        }
+                        else
+                        {
+                            eqEvenTriples.Register(nonZeroTriples);
+                            if (nonZeroTriples == 0)
+                            {
+                                eqEven0_cnt++;
+                            }
+                            eqEven_cnt++;
+                        }
+                    }
 
             MinMax oddTriples = new();
             MinMax evenTriples = new();
@@ -1884,50 +1902,72 @@ namespace akExtractMatMultSolution
             o("#");
         }
 
-        private static string GetTerm(int fgd, int product, bool transposed = false, bool autoQuote = false)
+        private static HashSet<Coefficient> GetCoefficients(int fgd)
         {
-            return GetTerm(Rows[fgd], Cols[fgd], product, litArrays[fgd], 
-                           literalName[fgd], coefficientName[fgd], 
-                           transposed, autoQuote);
+            HashSet<Coefficient> coefficients = [];
+
+            foreach ((int row, int col) in Indices(fgd))
+                foreach (int product in Products)
+                {
+                    Coefficient lit = litArrays[fgd][row, col, product];
+
+                    if (lit != 0)
+                    {
+                        coefficients.Add(lit);
+                    }
+                }
+
+            return coefficients;
         }
 
-        private static string GetTerm(int rows, int cols, int product, DynArray3D<int> litArray, 
-                                      string literalName, string elementName, 
+        private static string GetTerm(int fgd, int product,
                                       bool transposed = false, bool autoQuote = true)
         {
             string term = "";
+            int opCount = 0;
 
-            for (int row = 1; row <= rows; row++)
-                for (int col = 1; col <= cols; col++)
+            foreach ((int row, int col) in Indices(fgd))
+            {
+                Coefficient val = litArrays[fgd][row, col, product];
+
+                Check(val != undefined,
+                      Literal(literalName[fgd], row, col, product) + " is undefined");
+
+                if (val != 0)
                 {
-                    int val = litArray[row, col, product];
-
-                    Check(val != undefined, 
-                          Literal(literalName, row, col, product) + " is undefined");
-
-                    if (val != 0)
+                    if ((val.Real < 0) || val.IsNegativeImaginary)
                     {
-                        Check(val * val == 1, 
-                              Literal(literalName, row, col, product) + " has strange value");
-
-                        if (val < 0)
-                        {
-                            term += "- ";
-                        }
-                        else if (term.Length > 0)
-                        {
-                            term += "+ ";
-                        }
-
-                        term += transposed ? $"{elementName}{col}{row} " : $"{elementName}{row}{col} ";
+                        term += "- ";
+                        val = -val;
                     }
+                    else if (term.Length > 0)
+                    {
+                        term += "+ ";
+                    }
+
+                    if (val != 1)
+                    {
+                        term += $"{val}*";
+                    }
+
+                    term += transposed ? $"{coefficientName[fgd]}{col}{row} "
+                                       : $"{coefficientName[fgd]}{row}{col} ";
+                    opCount++;
                 }
+            }
 
             term = term.Trim();
             if (autoQuote && (term.Contains("+") || term.Contains("-")))
             {
                 term = $"({term})";
             }
+
+            if ((opCount == 1) && term.Contains(" "))
+            {
+                term = term.Replace(" ", "");
+            }
+
+            Check(opCount > 0, "Empty term!");
 
             return term;
         }
@@ -1943,9 +1983,13 @@ namespace akExtractMatMultSolution
         /// <param name="litArray">coefficient arary</param>
         /// <param name="transpose">access array transposed</param>
         /// <returns>number of non-zero elements</returns>
-        private static int GetTermArity(int k, int[] rowSet, int[] colSet, DynArray3D<int> litArray, bool transpose = false)
+        private static int GetTermArity(int k, int[] rowSet, int[] colSet,
+                                        DynArray3D<Coefficient> litArray,
+                                        bool transpose = false)
         {
             int arity = 0;
+
+            Check(!transpose, "Transpose mode NIY!");
 
             foreach (int row in rowSet)
                 foreach (int col in colSet)
@@ -1966,80 +2010,92 @@ namespace akExtractMatMultSolution
             MinMax oddMinMax = new();
             MinMax colMinMax = new();
             int[] columnSums = new int[noOfProducts];
-            int[] fk = new int[noOfProducts];
-            int[] gk = new int[noOfProducts];
+            Coefficient[] fk = new Coefficient[noOfProducts];
+            Coefficient[] gk = new Coefficient[noOfProducts];
 
-            for (int aRow = 1; aRow <= aRows; aRow++)
-                for (int aCol = 1; aCol <= aCols; aCol++)
+            foreach ((int aRow, int aCol) in AIndices)
+            {
+                foreach (int k in Products)
+                {
+                    fk[k - 1] = litArrayF[aRow, aCol, k];
+                }
+                foreach ((int bRow, int bCol) in BIndices)
                 {
                     foreach (int k in Products)
                     {
-                        fk[k - 1] = litArrayF[aRow, aCol, k];
+                        gk[k - 1] = fk[k - 1] * litArrayG[bRow, bCol, k];
                     }
-                    for (int bRow = 1; bRow <= bRows; bRow++)
-                        for (int bCol = 1; bCol <= bCols; bCol++)
+                    foreach ((int cRow, int cCol) in CIndices)
+                    {
+                        if (transposedMode && (cRow > cCol))
                         {
-                            foreach (int k in Products)
-                            {
-                                gk[k - 1] = fk[k-1] * litArrayG[bRow, bCol, k];
-                            }
-                            for (int cRow = 1; cRow <= cRows; cRow++)
-                                for (int cCol = 1; cCol <= cCols; cCol++)
-                                {
-                                    if (transposedMode && (cRow > cCol))
-                                    {
-                                        continue;
-                                    }
-
-                                    bool k1 = (aRow == cRow) && (aCol == bRow) && (bCol == cCol);
-                                    string s = $"{aRow}{aCol}{bRow}{bCol}{cRow}{cCol}: ";
-
-                                    int sum = 0;
-                                    int noOfNonZeroTriples = 0;
-
-                                    foreach (int k in Products)
-                                    {
-                                        int tr = gk[k-1] * litArrayD[cRow, cCol, k];
-
-                                        if (tr == 0)
-                                        {
-                                            s += "  0 ";
-                                        }
-                                        else if (tr < 0)
-                                        {
-                                            s += $"[{tr}]";
-                                            noOfNonZeroTriples++;
-                                        }
-                                        else
-                                        {
-                                            s += $" [{tr}]";
-                                            noOfNonZeroTriples++;
-                                        }
-
-                                        if (k1 && (tr != 0))
-                                        {
-                                            columnSums[k - 1]++;
-                                        }
-
-                                        sum += tr;
-                                    }
-
-                                    (k1 ? oddMinMax : evenMinMax).Register(noOfNonZeroTriples);
-
-                                    if (k1 == ((algorithmMode == AlgorithmMode.Mod2Brent ? (sum & 1) : sum) == 1))
-                                    {
-                                        okCount++;
-                                    }
-                                    else
-                                    {
-                                        s += k1 ? $" = {sum} != 1" : $" = {sum} != 0";
-                                        o($"# {s}");
-                                        ret = false;
-                                        errCount++;
-                                    }
-                                }
+                            continue;
                         }
+
+                        bool odd = (aRow == cRow) && (aCol == bRow) && (bCol == cCol);
+                        string s = $"{aRow}{aCol}{bRow}{bCol}{cRow}{cCol}: ";
+
+                        Coefficient sum = 0;
+                        int noOfNonZeroTriples = 0;
+
+                        foreach (int k in Products)
+                        {
+                            Coefficient tr = gk[k - 1] * litArrayD[cRow, cCol, k];
+
+                            if (tr == 0)
+                            {
+                                s += "  0 ";
+                            }
+                            else if (tr < 0)
+                            {
+                                s += $"[{tr}]";
+                                noOfNonZeroTriples++;
+                            }
+                            else
+                            {
+                                s += $" [{tr}]";
+                                noOfNonZeroTriples++;
+                            }
+
+                            if (odd && (tr != 0))
+                            {
+                                columnSums[k - 1]++;
+                            }
+
+                            sum += tr;
+                        }
+
+                            (odd ? oddMinMax : evenMinMax).Register(noOfNonZeroTriples);
+
+                        bool ok;
+
+                        if (!sum.IsInt)
+                        {
+                            ok = false;
+                        }
+                        else if (algorithmMode == AlgorithmMode.Mod2Brent)
+                        {
+                            ok = odd == (((int)sum & 1) == 1);
+                        }
+                        else
+                        {
+                            ok = odd == (sum == 1);
+                        }
+
+                        if (ok)
+                        {
+                            okCount++;
+                        }
+                        else
+                        {
+                            s += odd ? $" = {sum} != 1" : $" = {sum} != 0";
+                            o($"# {s}");
+                            ret = false;
+                            errCount++;
+                        }
+                    }
                 }
+            }
 
             foreach (int i in columnSums)
             {
@@ -2094,7 +2150,9 @@ namespace akExtractMatMultSolution
             {
                 fOut = sw;
                 o($"# Product report file '{productReportFileName}'");
-                o("# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm"));
+                o("# eXmm " + BuildDate());
+                o("# Created: " + Timestamp());
+                o("#-------------------------------------------------------------------------------");
                 o("");
 
                 //  collect triple references
@@ -2104,45 +2162,42 @@ namespace akExtractMatMultSolution
                 int[] oddCount = new int[noOfProducts + 1];
                 int[] evenCount = new int[noOfProducts + 1];
 
-                for (int aRow = 1; aRow <= aRows; aRow++)
-                    for (int bRow = 1; bRow <= bRows; bRow++)
-                        for (int cRow = 1; cRow <= cRows; cRow++)
-                            for (int aCol = 1; aCol <= aCols; aCol++)
-                                for (int bCol = 1; bCol <= bCols; bCol++)
-                                    for (int cCol = 1; cCol <= cCols; cCol++)
+                foreach ((int aRow, int aCol) in AIndices)
+                    foreach ((int bRow, int bCol) in BIndices)
+                        foreach ((int cRow, int cCol) in CIndices)
+                        {
+                            bool k1 = (aRow == cRow) && (aCol == bRow) && (bCol == cCol);
+                            string s = $"{aRow}{aCol}{bRow}{bCol}{cRow}{cCol}: ";
+
+                            foreach (int k in Products)
+                            {
+                                Coefficient tf = litArrayF[aRow, aCol, k];
+                                Coefficient tg = litArrayG[bRow, bCol, k];
+                                Coefficient td = litArrayD[cRow, cCol, k];
+                                Coefficient tr = tf * tg * td;
+
+                                if (tr != 0)
+                                {
+                                    Dictionary<string, List<int>> r = k1 ? oddRefs : refs;
+
+                                    if (!r.ContainsKey(s))
                                     {
-                                        bool k1 = (aRow == cRow) && (aCol == bRow) && (bCol == cCol);
-                                        string s = $"{aRow}{aCol}{bRow}{bCol}{cRow}{cCol}: ";
-
-                                        foreach (int k in Products)
-                                        {
-                                            int tf = litArrayF[aRow, aCol, k];
-                                            int tg = litArrayG[bRow, bCol, k];
-                                            int td = litArrayD[cRow, cCol, k];
-                                            int tr = tf * tg * td;
-
-                                            if (tr != 0)
-                                            {
-                                                Dictionary<string, List<int>> r = k1 ? oddRefs : refs;
-
-                                                if (!r.ContainsKey(s))
-                                                {
-                                                    r[s] = [];
-                                                }
-                                                r[s].Add(k);
-
-                                                (k1 ? oddCount : evenCount)[k] += 1;
-                                            }
-                                        }
+                                        r[s] = [];
                                     }
+                                    r[s].Add(k);
+
+                                    (k1 ? oddCount : evenCount)[k] += 1;
+                                }
+                            }
+                        }
 
                 foreach (int k in Products)
                 {
                     o($"Product {ProductName(k)}: {oddCount[k]} odd, {evenCount[k]} even triples");
 
-                    string terms = GetTerm((int)Mat.F, k) + " " +
-                                   GetTerm((int)Mat.G, k) + " " +
-                                   GetTerm((int)Mat.D, k);
+                    string terms = GetTerm(F, k) + " " +
+                                   GetTerm(G, k) + " " +
+                                   GetTerm(D, k);
                     o($"Terms {terms}");
 
                     //  first odd, then even triples
@@ -2190,7 +2245,9 @@ namespace akExtractMatMultSolution
             {
                 fOut = sw;
                 o($"# Product contributions file '{productContributionsFileName}'");
-                o("# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm"));
+                o("# eXmm " + BuildDate());
+                o("# Created: " + Timestamp());
+                o("#----------------------------------------------------------------------------------");
                 o("");
 
                 //  collect triple references
@@ -2200,37 +2257,34 @@ namespace akExtractMatMultSolution
                 int[] oddCount = new int[noOfProducts + 1];
                 int[] evenCount = new int[noOfProducts + 1];
 
-                for (int aRow = 1; aRow <= aRows; aRow++)
-                    for (int bRow = 1; bRow <= bRows; bRow++)
-                        for (int cRow = 1; cRow <= cRows; cRow++)
-                            for (int aCol = 1; aCol <= aCols; aCol++)
-                                for (int bCol = 1; bCol <= bCols; bCol++)
-                                    for (int cCol = 1; cCol <= cCols; cCol++)
+                foreach ((int aRow, int aCol) in AIndices)
+                    foreach ((int bRow, int bCol) in BIndices)
+                        foreach ((int cRow, int cCol) in CIndices)
+                        {
+                            bool k1 = (aRow == cRow) && (aCol == bRow) && (bCol == cCol);
+                            string s = $"{aRow}{aCol}{bRow}{bCol}{cRow}{cCol}: ";
+
+                            foreach (int k in Products)
+                            {
+                                Coefficient tf = litArrayF[aRow, aCol, k];
+                                Coefficient tg = litArrayG[bRow, bCol, k];
+                                Coefficient td = litArrayD[cRow, cCol, k];
+                                Coefficient tr = tf * tg * td;
+
+                                if (tr != 0)
+                                {
+                                    Dictionary<string, List<int>> r = k1 ? oddRefs : refs;
+
+                                    if (!r.ContainsKey(s))
                                     {
-                                        bool k1 = (aRow == cRow) && (aCol == bRow) && (bCol == cCol);
-                                        string s = $"{aRow}{aCol}{bRow}{bCol}{cRow}{cCol}: ";
-
-                                        foreach (int k in Products)
-                                        {
-                                            int tf = litArrayF[aRow, aCol, k];
-                                            int tg = litArrayG[bRow, bCol, k];
-                                            int td = litArrayD[cRow, cCol, k];
-                                            int tr = tf * tg * td;
-
-                                            if (tr != 0)
-                                            {
-                                                Dictionary<string, List<int>> r = k1 ? oddRefs : refs;
-
-                                                if (!r.ContainsKey(s))
-                                                {
-                                                    r[s] = [];
-                                                }
-                                                r[s].Add(k);
-
-                                                (k1 ? oddCount : evenCount)[k] += 1;
-                                            }
-                                        }
+                                        r[s] = [];
                                     }
+                                    r[s].Add(k);
+
+                                    (k1 ? oddCount : evenCount)[k] += 1;
+                                }
+                            }
+                        }
 
                 foreach (int k in Products)
                 {
@@ -2254,7 +2308,7 @@ namespace akExtractMatMultSolution
 
                             for (int col = 1; col <= Cols[fgd]; col++)
                             {
-                                int lit = litArrays[fgd][row, col, k];
+                                int lit = (int)litArrays[fgd][row, col, k];
 
                                 s += "- +"[lit + 1];
                             }
@@ -2426,7 +2480,7 @@ namespace akExtractMatMultSolution
             ReduceLiteralArrays(selectedARowsOpt, selectedAColsOpt, selectedBColsOpt, selectedProductsOpt);
         }
 
-      
+
         static void WriteSimplifiedYacasSolution(string simplifiedSolutionFileName)
         {
             if (simplifiedSolutionFileName == "")
@@ -2434,7 +2488,7 @@ namespace akExtractMatMultSolution
                 return;
             }
 
-            if (algorithmMode==AlgorithmMode.Mod2Brent)
+            if (algorithmMode == AlgorithmMode.Mod2Brent)
             {
                 Fatal("Common Subexpression Elimination is not supported for mod 2 algorithms");
             }
@@ -2460,7 +2514,7 @@ namespace akExtractMatMultSolution
                 fOut = sw;
 
                 WriteBlockComment($"Simplified Yacas script '{simplifiedSolutionFileName}' created "
-                    + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss") + "\n#",
+                    + Timestamp() + "\n#",
                     "Matrix multiplication method "
                     + (algorithmMode == AlgorithmMode.Mod2Brent ? "(mod 2!) " : "")
                     + "for " + Signature());
@@ -2506,8 +2560,8 @@ namespace akExtractMatMultSolution
 
                 foreach (int k in Products)
                 {
-                    (string aTerm, Subexpression aSe) = CseTerm(fCse, "a", "f", litArrayF, aRows, aCols, k);
-                    (string bTerm, Subexpression bSe) = CseTerm(gCse, "b", "g", litArrayG, bRows, bCols, k);
+                    (string aTerm, Subexpression aSe) = CseTerm(fCse, fgd: F, product: k);
+                    (string bTerm, Subexpression bSe) = CseTerm(gCse, fgd: G, product: k);
 
                     s = $"{ProductName(k)} := {aTerm} * {bTerm};";
                     o(s);
@@ -2523,22 +2577,21 @@ namespace akExtractMatMultSolution
 
                 WriteBlockComment("Target matrix sums of products:");
 
-                for (int row = 1; row <= cRows; row++)
-                    for (int col = 1; col <= cCols; col++)
+                foreach ((int row, int col) in CIndices)
+                {
+                    if (transposedMode && (row > col))
                     {
-                        if (transposedMode && (row > col))
-                        {
-                            Fatal("Transposed mode not supported yet. Sorry!");
-                            continue;
-                        }
-
-                        (string term, Subexpression se) = CseSumOfProducts(dCse, row, col);
-                        calc.Calculate($"c{row}{col}", se);
-
-                        s = $"c{row}{col} := {term}";
-                        s = s.Trim() + ";";
-                        o(s);
+                        Fatal("Transposed mode not supported yet. Sorry!");
+                        continue;
                     }
+
+                    (string term, Subexpression se) = CseSumOfProducts(dCse, row, col);
+                    calc.Calculate($"c{row}{col}", se);
+
+                    s = $"c{row}{col} := {term}";
+                    s = s.Trim() + ";";
+                    o(s);
+                }
 
                 o("");
 
@@ -2559,7 +2612,7 @@ namespace akExtractMatMultSolution
         /// Products consist of two factors.
         /// Each of them can be a true sum (2+ operands) or a simple variable (single operand).
         /// </summary>
-        private static void CalculateProduct(Calculator calc, string aTerm, Subexpression aSe, 
+        private static void CalculateProduct(Calculator calc, string aTerm, Subexpression aSe,
                                                               string bTerm, Subexpression bSe, int product)
         {
             string productName = ProductName(product);
@@ -2615,36 +2668,33 @@ namespace akExtractMatMultSolution
             int[,] b = new int[bRows, bCols];
             int sign = 1;
 
-            for (int row = 0; row < aRows; row++)
-                for (int col = 0; col < aCols; col++)
+            foreach ((int row, int col) in AIndices)
                 {
                     primes.MoveNext();
                     sign = -sign;
-                    a[row, col] = sign * primes.Current;
-                    calc.Store($"a{row + 1}{col + 1}", a[row, col]);
+                    a[row-1, col-1] = sign * primes.Current;
+                    calc.Store($"a{row}{col}", a[row-1, col-1]);
                 }
 
-            for (int row = 0; row < bRows; row++)
-                for (int col = 0; col < bCols; col++)
+            foreach ((int row, int col) in BIndices)
                 {
                     primes.MoveNext();
                     sign = -sign;
-                    b[row, col] = sign * primes.Current;
-                    calc.Store($"b{row + 1}{col + 1}", b[row, col]);
+                    b[row-1, col-1] = sign * primes.Current;
+                    calc.Store($"b{row}{col}", b[row-1, col-1]);
                 }
 
             dicName2Val = [];
-            for (int row = 0; row < cRows; row++)
-                for (int col = 0; col < cCols; col++)
+            foreach ((int row, int col) in CIndices)
                 {
                     int sum = 0;
 
                     for (int k = 0; k < aCols; k++)
                     {
-                        sum += a[row, k] * b[k, col];
+                        sum += a[row-1, k] * b[k, col-1];
                     }
 
-                    dicName2Val[$"c{row + 1}{col + 1}"] = sum;
+                    dicName2Val[$"c{row}{col}"] = sum;
                 }
         }
 
@@ -2677,23 +2727,22 @@ namespace akExtractMatMultSolution
             string s;
 
             if (algorithmMode == AlgorithmMode.FullBrent)
-                for (int row = 1; row <= cRows; row++)
-                    for (int col = 1; col <= cCols; col++)
+                foreach ((int row, int col) in CIndices)
+                {
+                    if (!transposedMode || (row <= col))
                     {
-                        if (!transposedMode || (row <= col))
+                        s = $"Simplify(c{row}{col} - (";
+
+                        foreach (int k in ACols)
                         {
-                            s = $"Simplify(c{row}{col} - (";
-
-                            for (int k = 1; k <= aCols; k++)
-                            {
-                                s += (k > 1) ? " + " : "";
-                                s += $"a{row}{k}*b{k}{col}";
-                            }
-
-                            s += "));";
-                            o(s);
+                            s += (k > 1) ? " + " : "";
+                            s += $"a{row}{k}*b{k}{col}";
                         }
+
+                        s += "));";
+                        o(s);
                     }
+                }
 
             o();
             if (!VerifyBrentEquations())
@@ -2713,7 +2762,7 @@ namespace akExtractMatMultSolution
             o("#");
         }
 
-        private static CommonSubexpressionEliminator 
+        private static CommonSubexpressionEliminator
             CreateCommonSubexpressionEliminator(Mat mat, string title)
         {
             int fgd = (int)mat;
@@ -2727,7 +2776,7 @@ namespace akExtractMatMultSolution
             if (mat != Mat.D)
             {
                 o($"Registering {noOfProducts} sums. One for every product.");
-                foreach(int k in Products)
+                foreach (int k in Products)
                 {
                     string s = GetTerm(fgd, k, autoQuote: false);
                     cse.RegisterSum(s);
@@ -2737,14 +2786,13 @@ namespace akExtractMatMultSolution
             else
             {
                 o($"Registering {cRows * cCols} sums of products. One fo every {cRows}x{cCols} C matrix element. ");
-                for (int row = 1; row <= cRows; row++)
-                    for (int col = 1; col <= cCols; col++)
-                    {
-                        string s = GetSumOfProducts(row, col);
-                        cse.RegisterSum(s);
-                    }
+                foreach ((int row, int col) in CIndices)
+                {
+                    string s = GetSumOfProducts(row, col);
+                    cse.RegisterSum(s);
+                }
                 o($"{cse.NoOfSums} sums of products registered. "
-                 +$"{cRows*cCols - cse.NoOfSums} SOPs have one operand only.");
+                 + $"{cRows * cCols - cse.NoOfSums} SOPs have one operand only.");
             }
             o();
 
@@ -2757,7 +2805,7 @@ namespace akExtractMatMultSolution
 
             foreach (int k in Products)
             {
-                int val = litArrayD[row, col, k];
+                Coefficient val = litArrayD[row, col, k];
 
                 if (val != 0)
                 {
@@ -2776,67 +2824,109 @@ namespace akExtractMatMultSolution
         {
             if (algorithmMode == AlgorithmMode.FullBrent)
             {
-                for (int row = 1; row <= cRows; row++)
-                    for (int col = 1; col <= cCols; col++)
-                        if (litArrayD[row, col, 1] < 0)
-                        {
-                            return true;
-                        }
+                foreach ((int row, int col) in CIndices)
+                    if (litArrayD[row, col, 1] < 0)
+                    {
+                        return true;
+                    }
             }
 
             return false;
         }
 
-        private static string GetSumOfProductsExtended(int row, int col)
+        private static int GetProductWidth(int product)
         {
-            string s = "";
+            int width = 0;
+
+            foreach ((int row, int col) in CIndices)
+                if (!transposedMode || (row <= col))
+                {
+                    Coefficient val = litArrayD[row, col, product];
+
+                    Check(val != undefined,
+                        Literal(literalName[D], row, col, product) + " is undefined");
+                    string s = "";
+
+                    if (val < 0)
+                    {
+                        s += "- ";
+                        val = -val;
+                    }
+                    else if (product > 1)
+                    {
+                        s += "+ ";
+                    }
+
+                    if (val != 1)
+                    {
+                        s += $"{val}*";
+                    }
+
+                    s += $"{ProductName(product)} ";
+                    width = Math.Max(s.Length, width);
+                }
+
+            return width;
+        }
+
+        private static string GetSumOfProductsExtended(int row, int col, int[] widths)
+        {
+            string line = "";
             string sumSep = "  ";
 
             foreach (int k in Products)
             {
-                int val = litArrayD[row, col, k];
+                Coefficient val = litArrayD[row, col, k];
 
-                Check(val != undefined, Literal("D", row, col, k) + " is undefined");
+                Check(val != undefined,
+                    Literal(literalName[D], row, col, k) + " is undefined");
 
                 if (val != 0)
                 {
-                    Check(val * val == 1, Literal("D", row, col, k) + "has strange value");
-                    if (val < 0)
+                    string sProduct = "";
+
+                    if ((val < 0) || val.IsNegativeImaginary)
                     {
                         Check(algorithmMode == AlgorithmMode.FullBrent,
                               "Unexpected negative value!");
-                        s += "- ";
+                        sProduct += "- ";
+                        val = -val;
                     }
                     else
                     {
                         //  omit the first '+' in sum not preceeded by a '-'
-                        s += sumSep;
+                        sProduct += sumSep;
                     }
                     sumSep = "+ ";
 
-                    s += $"{ProductName(k)} ";
+                    if (val != 1)
+                    {
+                        sProduct += $"{val}*";
+                    }
+
+                    line += $"{sProduct}{ProductName(k)}".PadLeft(widths[k - 1], ' ');
                 }
                 else
                 {
-                    s += "  " + "".PadRight(1 + productDigits, ' ') + " ";
+                    line += "".PadRight(widths[k - 1], ' ');
                 }
             }
 
             if (!NegativeP1Exists())
             {
-                s = s.Substring(2);
+                line = line.Substring(2);
             }
 
-            return s.TrimEnd();
+            return line.TrimEnd();
         }
 
-        private static (string, Subexpression) CseTerm(CommonSubexpressionEliminator cse, string litName, string prefix, 
-                                      DynArray3D<int> litArray, int rows, int cols, int product)
+        private static (string, Subexpression)
+            CseTerm(CommonSubexpressionEliminator cse, int fgd, int product)
         {
-            string s = GetTerm(rows, cols, product, litArray, prefix.ToUpper(), litName, autoQuote:false);
+            string s = GetTerm(fgd, product, autoQuote: false);
             string term;
             Subexpression se;
-            
+
             (term, se) = cse.SimplifiedSum(s);
 
             if (term.Contains('+') || term.Contains("-"))
@@ -2846,7 +2936,8 @@ namespace akExtractMatMultSolution
             return (term, se);
         }
 
-        private static (string, Subexpression) CseSumOfProducts(CommonSubexpressionEliminator cse, int row, int col)
+        private static (string, Subexpression)
+            CseSumOfProducts(CommonSubexpressionEliminator cse, int row, int col)
         {
             string s = GetSumOfProducts(row, col);
             string t;
@@ -2869,16 +2960,17 @@ namespace akExtractMatMultSolution
             {
                 fOut = sw;
                 o($"# Solution file '{solutionFileName}'");
-                o("# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm"));
+                o($"~:# eXmm {BuildDate()}");
+                o("~:# Created: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm"));
                 o("");
 
                 foreach (int fgd in Fgd_all)
-                    for (int row = 1; row <= Rows[fgd]; row++)
-                        for (int col = 1; col <= Cols[fgd]; col++)
-                            foreach (int k in Products)
-                            {
-                                o($"{Literal(literalName[fgd], row, col, k)} = {litArrays[fgd][row, col, k]}");
-                            }
+                    foreach ((int row, int col) in Indices(fgd))
+                        foreach (int k in Products)
+                        {
+                            o($"{Literal(literalName[fgd], row, col, k)} = "
+                             + $"{litArrays[fgd][row, col, k]}");
+                        }
                 o("");
             }
             fOut = null;
@@ -2888,10 +2980,10 @@ namespace akExtractMatMultSolution
         {
             try
             {
-                string[] arr = Tokenize(reducedSignature, XSeparator);
+                string[] arr = Tokenize(reducedSignature, ['x']);
                 return int.Parse(arr[v]);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 o($"Invalid signature '{reducedSignature}': {ex.Message}. Two parts expected. Format rxc");
                 Finish(1);
