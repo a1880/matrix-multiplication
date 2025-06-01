@@ -1,6 +1,6 @@
 # akDumpNumpyTensor
 
-Python tool to convert AlphaEvolve solutions to testor text format.
+Python tool to convert AlphaEvolve solutions to tensor text format.
 
 The AlphaEvolve solutions where taken from their Google Collab Notebooks and stored in Python text files. These text files are then imported and processed by akDumpNumpyTensor.
 
