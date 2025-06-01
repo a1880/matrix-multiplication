@@ -7,7 +7,9 @@ Axel Kemper  23-May-20205
 """
 import importlib
 from math import floor
+from typing import Any
 import numpy as np
+from numpy._typing import NDArray
 
 class MatMultTensor:
     """
@@ -24,11 +26,11 @@ class MatMultTensor:
         self.check(self.file_name == decomposition.__name__, "Inconsistent decomposition name")
 
         """ once, we have the docomposition module, we have the tuple of 3 np.array objects """
-        self._data: tuple = getattr(decomposition, self.file_name)
+        self._data: tuple[NDArray[Any], NDArray[Any], NDArray[Any]] = getattr(decomposition, self.file_name)
         self.check(len(self._data) == 3, "Unexpected tuple len != 3")
-        self._a: np.array = self._data[0]
-        self._b: np.array = self._data[1]
-        self._c: np.array = self._data[2]
+        self._a: NDArray[Any] = self._data[0]
+        self._b: NDArray[Any] = self._data[1]
+        self._c: NDArray[Any] = self._data[2]
 
         """ the matrix dimensions are encoded in the problem signature """
         self.aRows = int(signature[0:1])
@@ -45,6 +47,9 @@ class MatMultTensor:
         self._Rows = [self.aRows, self.aCols, self.aRows]
         self._Cols = [self.aCols, self.bCols, self.bCols]
 
+        """ for compact loops we have pairs of indices as tuples """
+        self._indices_fgd = [self.indices(self.Rows(fgd), self.Cols(fgd)) for fgd in self.FGD]
+
         """ we only evaluate the data type at the beginning, and based on a[]
             This need to be changed, if tensor data should become mutable  """
         self._data_type = self.get_data_type()
@@ -52,16 +57,16 @@ class MatMultTensor:
         """ save our souls """
         self.validate()
 
-    def a(self, row, col, product):
+    def a(self, row: int, col: int, product: int):
         return self.data(self.F, row, col, product);
 
-    def b(self, row, col, product):
+    def b(self, row: int, col: int, product: int):
         return self.data(self.G, row, col, product);
 
-    def c(self, row, col, product):
+    def c(self, row: int, col: int, product: int):
         return self.data(self.D, row, col, product);
 
-    def data(self, fgd, row, col, product):
+    def data(self, fgd: int, row:int, col:int, product: int):
         rows = self.Rows(fgd)
         cols = self.Cols(fgd)
         self.check(row < rows, "Inconsistent row")
@@ -78,12 +83,12 @@ class MatMultTensor:
         return self._data_type
 
     @property
-    def AIndices(self) -> list:
-        return MatMultTensor.indices(self.aRows, self.aCols)
+    def AIndices(self) -> list[tuple[int, int]]:
+        return self._indices_fgd[self.F]
 
     @property
-    def BIndices(self) -> list:
-        return MatMultTensor.indices(self.bRows, self.bCols)
+    def BIndices(self) -> list[tuple[int, int]]:
+        return self._indices_fgd[self.G]
 
     def check(self, condition: bool, msg: str):
         if not condition:
@@ -91,10 +96,10 @@ class MatMultTensor:
             raise RuntimeError(msg)
 
     @property
-    def CIndices(self) -> list:
-        return MatMultTensor.indices(self.cRows, self.cCols)
+    def CIndices(self) -> list[tuple[int, int]]:
+        return self._indices_fgd[self.D]
 
-    def Cols(self, fgd) -> list[int]:
+    def Cols(self, fgd: int) -> int:
         return self._Cols[fgd]
 
     @property
@@ -121,8 +126,8 @@ class MatMultTensor:
     def G(self) -> int:
         return 1
 
-    def get_coefficients(self) -> list:
-        c: set = set()
+    def get_coefficients(self) -> list[Any]:
+        c: set[Any] = set()
         for fgd in self.FGD:
             for row, col in self.indices_fgd(fgd):
                 for k in self.Products:
@@ -136,7 +141,7 @@ class MatMultTensor:
         else:
             a = sorted(c)
 
-        return a
+        return a # type: ignore
 
     def get_data_type(self):
         if self._a.dtype == np.complex64:
@@ -153,13 +158,13 @@ class MatMultTensor:
         raise RuntimeError("data type unexpected")
 
     @staticmethod
-    def indices(rows, cols) -> list:
+    def indices(rows: int, cols: int) -> list[tuple[int, int]]:
         return [(row, col) for row in range(rows) for col in range(cols)]
 
-    def indices_fgd(self, fgd: int) -> list:
-        return MatMultTensor.indices(self._Rows[fgd], self._Cols[fgd])
+    def indices_fgd(self, fgd: int) -> list[tuple[int, int]]:
+        return self._indices_fgd[fgd]
 
-    def o(self, s):
+    def o(self, s: str):
         print(s)
 
     @property
@@ -167,10 +172,10 @@ class MatMultTensor:
         return f"{self.aRows}x{self.aCols}x{self.bCols}_{self.noOfProducts}"
 
     @property
-    def Products(self) -> list[int]:
+    def Products(self) -> range:
         return range(self.noOfProducts)
 
-    def Rows(self, fgd) -> list[int]:
+    def Rows(self, fgd: int) -> int:
         return self._Rows[fgd]
     
     def validate(self):

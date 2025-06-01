@@ -1,5 +1,9 @@
 # Change Log
 
+## 01-Jun-2025 Type checking
+
+Python type checking in akDumpNumpyTensor to increase code quality
+
 ## 29-May-2025 eXmm (former akExtractMatMultSolution)
 
 eXmm was extended to process complex coefficients.
