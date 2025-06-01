@@ -3,7 +3,7 @@
 ## 29-May-2025 eXmm (former akExtractMatMultSolution)
 
 eXmm was extended to process complex coefficients.
-A recusive descent parser was implemented to translate expressions
+A recursive descent parser was implemented to translate expressions
 into abstract syntax trees (AST).
 
 ## 24-May-2025 AlphaEvolve solutions
