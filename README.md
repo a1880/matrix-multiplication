@@ -67,8 +67,9 @@ Don't expect production quality.
 | [akBrentUp](src/akBrentUp)                               | Python tool to lift a matrix multiplication algorithm                             |
 | [akBrentWithSbr](src/akBrentWithSbr)                     | Python tool to solve Brent Equations modulo 2 with symmetry breaking              |
 | [akDumpNumpyTensor](src/akDumpNumpyTensor)               | Python tool to write AlphaEvolve solution to our tensor format                    |
-| [akExtractMatMultSolution](src/akExtractMatMultSolution) | c# tool to convert between various formats of matrix multiplication algorithms    |
+| [akExtractMatMultSolution](src/akExtractMatMultSolution) | C# tool to convert between various formats of matrix multiplication algorithms    |
 | [akTensorMod2](src/akTensorMod2)                         | Python tool to down-convert general multiplication algorithm to its modulo 2 form |
+| [akYacasChecker](src/akYacasChecker)                     | C# tool to check the correctness of matrix multiplication algorithms in Yacas form |
 
 [1]: https://gdz.sub.uni-goettingen.de/id/PPN362160546_0013?tify=%7B%22view%22:%22info%22,%22pages%22:%5B358%5D%7D
 [2]: https://www.nature.com/articles/s41586-022-05172-4

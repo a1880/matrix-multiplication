@@ -1,5 +1,11 @@
 # Change Log
 
+## 02-Jun-2025 Yacas script validation
+
+The new C# tool akYacasChecker validates Yacas scripts.
+Matrix multiplication algorithms in Yacas format are
+symbolically evaluated to prove  their correctness.
+
 ## 01-Jun-2025 Type checking
 
 Python type checking in akDumpNumpyTensor to increase code quality
