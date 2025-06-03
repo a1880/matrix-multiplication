@@ -1,10 +1,11 @@
 # Change Log
 
-## 02-Jun-2025 Yacas script validation
+## 03-Jun-2025 Yacas script validation
 
 The new C# tool akYacasChecker validates Yacas scripts.
 Matrix multiplication algorithms in Yacas format are
 symbolically evaluated to prove  their correctness.
+akYakasChecker uses akUtil as shared project.
 
 ## 01-Jun-2025 Type checking
 
