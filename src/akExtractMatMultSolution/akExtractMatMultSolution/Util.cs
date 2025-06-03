@@ -6,6 +6,9 @@ using System.Linq;
 
 namespace akExtractMatMultSolution
 {
+    /// <summary>
+    /// Boiler-plate collection of commonly used routines
+    /// </summary>
     public class Util
     {
         public static StreamWriter fOut = null;
@@ -112,7 +115,6 @@ namespace akExtractMatMultSolution
 
             Environment.Exit(code);
         }
-
 
         public static void Fatal(string msg)
         {

@@ -1,7 +1,7 @@
-﻿using static akExtractMatMultSolution.Util;
-
-namespace akExtractMatMultSolution
+﻿namespace akExtractMatMultSolution
 {
+    using static Util;
+
     class DynArray1D<T>(T defaultValue)
     {
         private T[] arr = [];

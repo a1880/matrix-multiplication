@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using static akExtractMatMultSolution.Util;
 
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
     /// <summary>
     /// Class to calculate and store numerical values.
     /// 

@@ -1,6 +1,9 @@
-﻿
+﻿using System.Globalization;
+
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
     //  operators are ordered in decreasing priority
     public enum TokenType 
     { 
@@ -27,7 +30,7 @@ namespace akExtractMatMultSolution
 
         public readonly double Double()
         {
-            if (!double.TryParse(text, out double result))
+            if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
             {
                 throw new SyntaxErrorException($"Cannot process '{text}' as double", this);
             }
@@ -39,7 +42,7 @@ namespace akExtractMatMultSolution
     /// <summary>
     /// Class to tokenize the string to be parsed by the Parser
     /// </summary>
-    class Lexer : Util
+    class Lexer
     {
         private readonly char[] scanBuffer;
         private int pos;

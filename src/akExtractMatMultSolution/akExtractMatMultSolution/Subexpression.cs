@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using static akExtractMatMultSolution.Util;
-
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
     /// <summary>
     /// Class Subexpression represents are partial sum.
     /// It consists of positive and negative operands.

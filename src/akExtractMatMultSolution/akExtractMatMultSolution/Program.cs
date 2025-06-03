@@ -5,11 +5,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using static akExtractMatMultSolution.MatrixDimensions;
-using static akExtractMatMultSolution.Util;
 
 namespace akExtractMatMultSolution
 {
+    using static MatrixDimensions;
+    using static Util;
     class Program
     {
         private static readonly string[] usageStrings =
@@ -102,9 +102,6 @@ namespace akExtractMatMultSolution
             public int product;
         };
 
-        enum ParseState { started, name, row, col, finished };
-        enum Domain { Int, Float, Complex, Undefined };
-
 
         static Dictionary<int, LitDescriptor> dicId2Lit;
 
@@ -180,7 +177,7 @@ namespace akExtractMatMultSolution
                     break;
 
                 case "--bini":
-                    CreateLiteralArrays(defaultValue: undefined);
+                    CreateLiteralArrays();
 
                     ReadLiteralValuesBini(args[1]);
                     break;
@@ -211,7 +208,7 @@ namespace akExtractMatMultSolution
 
                     dicId2Lit = [];
 
-                    CreateLiteralArrays(defaultValue: undefined);
+                    CreateLiteralArrays();
 
                     ReadAkBooleLiteralIDs(args[1]);
                     ReadSatSolution(args[2]);
@@ -224,29 +221,16 @@ namespace akExtractMatMultSolution
 
                     dicId2Lit = [];
 
-                    CreateLiteralArrays(defaultValue: undefined);
+                    CreateLiteralArrays();
 
-                    ReadAkBooleSolution(args[1], revisedMode: false);
+                    ReadAkBooleSolution(args[1]);
                     GetProblemDimensions();
                     ReadAkBooleSolution(args[2], revisedMode: true);
                     break;
 
                 default:
-                    using (StreamReader sr = OpenReader(args[0], "akBoole solution"))
-                    {
-                        CreateLiteralArrays(defaultValue: undefined);
-
-                        while (!sr.EndOfStream)
-                        {
-                            string s = sr.ReadLine();
-
-                            if (s.Contains(" = ") && !s.StartsWith("[") && !s.StartsWith("Variables:") &&
-                                (s.EndsWith("0") || s.EndsWith("1")))
-                            {
-                                ReadLiteralValue(s, revisedMode: false);
-                            }
-                        }
-                    }
+                    CreateLiteralArrays(defaultValue: undefined);
+                    ReadAkBooleSolution(args[0]);
                     break;
             }
         }
@@ -350,7 +334,7 @@ namespace akExtractMatMultSolution
             }
         }
 
-        private static void ReadAkBooleSolution(string fileName, bool revisedMode)
+        private static void ReadAkBooleSolution(string fileName, bool revisedMode = false)
         {
             string mode = revisedMode ? "revised " : "";
             int litCount = 0;
@@ -1683,6 +1667,15 @@ namespace akExtractMatMultSolution
                     o("# Result matrix is symmetric.");
                 }
 
+                if (HasComplexCoefficients)
+                {
+                    o("#");
+                    o("# Note:");
+                    o("# Yacas does except '*I' rather than 'j' as imaginary unit.");
+                    o("# Therefore, this script has to be changed before it can be fed into Yacas.");
+                    o("# For the time being, we stick to 'j' because of limitations of our parser.");
+                }
+
                 o("#");
                 o($"# Intermediate products: {noOfProducts}");
                 o("#");
@@ -2491,6 +2484,10 @@ namespace akExtractMatMultSolution
             if (algorithmMode == AlgorithmMode.Mod2Brent)
             {
                 Fatal("Common Subexpression Elimination is not supported for mod 2 algorithms");
+            }
+            if (HasComplexCoefficients)
+            {
+                Fatal("Common Subexpression Elimination is not supported for complex coefficients");
             }
             PreparePrimeElementValidation(out Calculator calc, out Dictionary<string, double> dicName2Val);
 

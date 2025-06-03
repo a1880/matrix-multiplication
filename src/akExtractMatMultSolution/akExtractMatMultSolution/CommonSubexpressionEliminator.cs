@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using static akExtractMatMultSolution.Util;
 
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
     /// <summary>
     /// Class to simplify a collection of sums by extracting and replacing
     /// commonly used subexpressions.
@@ -66,6 +67,7 @@ namespace akExtractMatMultSolution
         /// </summary>
         public int OpCount => sums.Sum(sum => sum.Length - 1) 
                             + auxExprs.Sum(e => e.Length - 1);
+
 
         /// <summary>
         /// Register new sum in collection of sums to simplify.

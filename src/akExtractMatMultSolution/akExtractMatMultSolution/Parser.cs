@@ -2,14 +2,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
     /// <summary>
-    /// Class to convert an expression into a tree of AstAstNode elements
+    /// Class to convert an expression into a tree of AstNode elements
     /// </summary>
-    class Parser : Util
+    class Parser
     {
         private Lexer lex;   //  scanner/lexer for expression tokenizing
         private Token token;

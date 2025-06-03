@@ -1,8 +1,9 @@
 ﻿using System;
-using static akExtractMatMultSolution.Util;
 
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
     /// <summary>
     /// Class to hold and model a Coefficient.
     /// The value can be int, float or complex.
@@ -18,6 +19,12 @@ namespace akExtractMatMultSolution
         {
             Real = real;
             Imaginary = imaginary;
+        }
+
+        public Coefficient(Coefficient other)
+        {
+            Real = other.Real;
+            Imaginary = other.Imaginary;    
         }
 
         public Coefficient(string s)

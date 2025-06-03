@@ -2,10 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using static akExtractMatMultSolution.Util;
 
 namespace akExtractMatMultSolution
 {
+    using static Util;
+
+    /// <summary>
+    /// Central class to administer the matrix multiplication problem
+    /// and its dimensions/parameters
+    /// </summary>
     public class MatrixDimensions
     {
         public static int aRows = 0;
@@ -21,6 +26,8 @@ namespace akExtractMatMultSolution
 
         public static int[] Fgd_all = null;
 
+        //  can't really tell, why we are using F, G, D
+        //  to address coefficients for [a], [b] and [c]
         public enum Mat { F = 0, G = 1, D = 2, unknown = 999 };
         public readonly static int F = (int)Mat.F;
 
@@ -28,31 +35,39 @@ namespace akExtractMatMultSolution
 
         public readonly static int D = (int)Mat.D;
 
+        //  in solver solution files, F, G, D are used as variable names
         public static readonly string[] literalName = ["F", "G", "D"];
         public static readonly string[] matrixNames = ["A", "B", "C"];
         public static readonly string[] coefficientName = ["a", "b", "c"];
 
+        //  global flag to tell if problem dimensions have already been determined
         private static bool RowsColsAreValid = false;
-        private static bool HasComplexCoefficients = false;
+
+        //  are there any complex coefficients?
+        public static bool HasComplexCoefficients = false;
+
+        //  the numbers of rows and columns for matrices A, B, C / F, G, D
         public static int[] Rows;
         public static int[] Cols;
 
+        //  rows and cols are provided as ready-made range arrays
         public static IEnumerable<int>[] RowsRange;
         public static IEnumerable<int>[] ColsRange;
 
+        //  a coefficient is set to 'undefined', unless it is actually defined
         public const int undefined = int.MinValue;
         public static DynArray3D<Coefficient> litArrayF;
         public static DynArray3D<Coefficient> litArrayG;
         public static DynArray3D<Coefficient> litArrayD;
+
+        //  initiated by CreateLiteralArrays()
+        public static DynArray3D<Coefficient>[] litArrays;
 
         public enum AlgorithmMode { FullBrent, Mod2Brent };
 
         public static AlgorithmMode algorithmMode;
 
         public static bool transposedMode = false;
-
-        //  initiated by CreateLiteralArrays()
-        public static DynArray3D<Coefficient>[] litArrays;
 
         /// <summary>
         /// Count number of plus/minus elements in term
@@ -217,15 +232,31 @@ namespace akExtractMatMultSolution
             SetArraysToReadonly(_readonly: true);
         }
 
-        public static void CreateLiteralArrays(int defaultValue)
+        /// <summary>
+        /// Coefficients of the matrix multiplication algorithm
+        /// are stored as "literals" in three 3D arrays.
+        /// The three indices are row, column and product.
+        /// Note: All three indices are 1-based
+        /// </summary>
+        /// <param name="defaultValue">The value present without reading anything</param>
+        public static void CreateLiteralArrays(int defaultValue = undefined)
         {
             litArrayF = new DynArray3D<Coefficient>(defaultValue);
             litArrayG = new DynArray3D<Coefficient>(defaultValue);
             litArrayD = new DynArray3D<Coefficient>(defaultValue);
 
+            //  this array help to access the literal arrays
+            //  via fgd index [F=0, G=1, D=2]
             litArrays = [litArrayF, litArrayG, litArrayD];
         }
 
+        /// <summary>
+        /// Loop through all coefficient literals to find out,
+        /// if we are dealing with a mod 2 solution of Brent Equations.
+        /// This would imply that all coefficients are in {0, +1}.
+        /// If there are other (or even complex) coefficients,
+        /// we are looking at a general solution of Brent Equations
+        /// </summary>
         private static void DetermineMode()
         {
             Coefficient min = int.MaxValue;
@@ -270,6 +301,13 @@ namespace akExtractMatMultSolution
             HasComplexCoefficients = bComplexValues;
         }
 
+        /// <summary>
+        /// Extract the numbers of rows and columns for the 
+        /// coefficient matrices.
+        /// Check if everything complies the a matrix product.
+        /// Finally, dtermine, if we are looking for a
+        /// mod 2 or a general solution of Brent Equations
+        /// </summary>
         public static void GetProblemDimensions()
         {
             aRows = litArrayF.GetLength(0) - 1;
@@ -313,6 +351,9 @@ namespace akExtractMatMultSolution
             DetermineMode();
         }
 
+        //  The following provide 2D loo indices as
+        //  enumerable sequence of tuples.
+        //  This helps to write nested loops in a more compact way.
         public static IEnumerable<(int row, int col)> AIndices => Indices(F);
         public static IEnumerable<(int row, int col)> BIndices => Indices(G);
         public static IEnumerable<(int row, int col)> CIndices => Indices(D);
@@ -321,9 +362,11 @@ namespace akExtractMatMultSolution
         public static IEnumerable<int> ACols => ColsRange[F];
         public static IEnumerable<int> BRows => RowsRange[G];
         public static IEnumerable<int> BCols => ColsRange[G];
-        public static IEnumerable<int> CRows => RowsRange[D];
-        public static IEnumerable<int> CCols => ColsRange[D];
 
+        // Not used: public static IEnumerable<int> CRows => RowsRange[D];
+        // Not used: public static IEnumerable<int> CCols => ColsRange[D];
+
+        //  2D indices for one of the matrices F, G or D
         public static IEnumerable<(int row, int col)> Indices(Mat mat) => Indices((int)mat);
 
         public static IEnumerable<(int row, int col)> Indices(int fgd)
