@@ -26,3 +26,5 @@ Simplify(c22 - (a21*b12 + a22*b22));
 ```
 
 The `Simplify()` lines compare the resulting values against the values obtained by using the schoolbook method. The checker actually determines, if all `Simplify()` expressions in fact result in zero values. Non-zero values indicate errors in the algorithm.
+
+The check involves parsing all expressions and translating them to abstract syntax trees (AST). The parsed expression trees - with their potentially complex factors - are then expanded to get sums / differences of coefficients. For all coefficients, the resulting sum must be zero. Otherwise, the algorithm is not correct.

@@ -1,5 +1,9 @@
 # Change Log
 
+## 06-Jun-2025 akYacasChecker cleanup
+
+Added comments, refactored code
+
 ## 03-Jun-2025 Yacas script validation
 
 The new C# tool akYacasChecker validates Yacas scripts.

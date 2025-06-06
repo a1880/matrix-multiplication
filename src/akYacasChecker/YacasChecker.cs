@@ -78,11 +78,27 @@ namespace akYacasChecker
     }
 
 
+    /// <summary>
+    /// The main class to akYacasChecker.
+    /// It reads the Yacas script and validates the contained matrix multiplication algorithm
+    /// </summary>
     internal class YacasChecker
     {
+        /// <summary>
+        /// Name of the Yacas script to be validated
+        /// </summary>
         private readonly string fileName;
+        /// <summary>
+        /// Dictionary elements stores the sum expressions for all elements of matrix [c]
+        /// </summary>
         private readonly Dictionary<string, string> elements = [];
+        /// <summary>
+        /// Dictionary products stores the products of sums for all intermediate products p01 .. pxx
+        /// </summary>
         private readonly Dictionary<string, string> products = [];
+        /// <summary>
+        /// Single instance of Parser to parse all expressions
+        /// </summary>
         private readonly Parser parser = new();
 
         public YacasChecker(string fileName)
@@ -98,6 +114,12 @@ namespace akYacasChecker
                    (binOp.Operator == TokenType.subtract));
         }
 
+        /// <summary>
+        /// Recursive subroutine of CheckForZeroSums() see blow
+        /// </summary>
+        /// <param name="nd">The AST root to start the scan</param>
+        /// <param name="sign">Polarity +1 or -1 to use for tree</param>
+        /// <param name="dic">Dictionary to store the resulting coefficients</param>
         private void CheckForZeroSumsTraverse(AstNode nd, int sign, Dictionary<string, Coefficient> dic)
         {
             if (nd is BinaryOperationNode binOp)
@@ -145,6 +167,8 @@ namespace akYacasChecker
         }
         /// <summary>
         /// Traverse AST and count the Coefficient products with their factors
+        /// The expanded AST contains sums / differences of Coefficients.
+        /// For every Coefficient, the resulting sum must be zero.
         /// </summary>
         private bool CheckForZeroSums(AstNode nd)
         {
@@ -199,6 +223,11 @@ namespace akYacasChecker
         }
 
 
+        /// <summary>
+        /// Expand a binary AST Node: +, - or *
+        /// </summary>
+        /// <param name="binOp">The Node to expand</param>
+        /// <returns>Expanded AST</returns>
         private AstNode ExpandBinary(BinaryOperationNode binOp)
         {
             if (IsAddOrSub(binOp))
@@ -221,6 +250,9 @@ namespace akYacasChecker
             return null;
         }
 
+        /// <summary>
+        /// Return a short identifier for the AST node
+        /// </summary>
         private string TypeString(AstNode nd)
         {
             string s = nd.GetType().Name switch
@@ -238,13 +270,19 @@ namespace akYacasChecker
         }
         private AstNode ExpandTimes(BinaryOperationNode binOp)
         {
+            //  expand both sub-trees
             binOp = new(Expand(binOp.Left), binOp.Operator, Expand(binOp.Right));
 
+            //  use a two-part string as case selector
+            //  This leads to 6 * 6 = 36 cases; not all of them may occur in practice ...
             string sel = TypeString(binOp.Left) + "-" + TypeString(binOp.Right);
+
+            //  the resulting expanded AST
             AstNode retNd = null;
 
             switch(sel)
             {
+                //  both operands are binary operations ASTs
                 case "binary-binary":
                     {
                         //  (a op1 b) * (c op2 d)  ==> (a*c op2 a*d) op1 (b*c op2 b*d)
@@ -262,6 +300,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is binary op AST, right is a ComplexNode
                 case "binary-cplx":
                     {
                         // (a op b) * c  => (a*c) op (b*c)
@@ -274,6 +313,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a binary operation AST, right is a CoefficientProduct
                 case "binary-cprd":
                     {
                         // (a op b) * c  => (a*c) op (b*c)
@@ -286,6 +326,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a binary operation AST, right is unary operation AST
                 case "binary-unary":
                     {
                         //  (x op1 y) * op2 z   ==> op2 ((x op1 y) * z)
@@ -297,6 +338,7 @@ namespace akYacasChecker
                         retNd = ExpandUnary(nd);
                         break;
                     }
+                //  left operand is a binary operation AST, right is variable
                 case "binary-var":
                     {
                         //  (x op y) * v  ==>  (x*v op y*v)
@@ -308,6 +350,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a binary operation AST, right is a variable product
                 case "binary-vprd":
                     {
                         //  (x op y) * v  ==>  (x*v op y*v)
@@ -319,6 +362,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a ComplexNode AST, right is binary operation AST
                 case "cplx-binary":
                     {
                         //  c * (x op y)  ==>  (c*x op c*y)
@@ -330,6 +374,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  both operands are ComplexNode ASTs
                 case "cplx-cplx":
                     {
                         //  c * d  ==>  cd
@@ -339,6 +384,7 @@ namespace akYacasChecker
                         retNd = new ComplexNode(c.Value * d.Value);
                         break;
                     }
+                //  left operand is a ComplexNode AST, right is a CoefficientProduct
                 case "cplx-cprd":
                     {
                         //  c * d  ==>  cd
@@ -348,6 +394,7 @@ namespace akYacasChecker
                         retNd = new CoefficientProduct(d.Name, c.Value * d.Factor);
                         break;
                     }
+                //  left operand is a ComplexNode AST, right is unary operation AST
                 case "cplx-unary":
                     {
                         //  c * op z   ==> (op c) * z
@@ -359,6 +406,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a ComplexNode AST, right is a variable
                 case "cplx-var":
                     {
                         //  c * v  ==>  cv
@@ -368,6 +416,7 @@ namespace akYacasChecker
                         retNd = new VariableProduct(v.Name, c.Value);
                         break;
                     }
+                //  left operand is a ComplexNode AST, right is a variable product
                 case "cplx-vprd":
                     {
                         //  c * v  ==>  cv
@@ -378,6 +427,7 @@ namespace akYacasChecker
                         break;
                     }
 
+                //  left operand is a CoefficientProduct AST, right is a binary operation AST
                 case "cprd-binary":
                     {
                         //  c * (x op y)  ==>  (c*x op c*y)
@@ -389,6 +439,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a CoefficientProduct AST, right is a ComplexNode AST
                 case "cprd-cplx":
                     {
                         //  c * d  ==>  cd
@@ -398,6 +449,7 @@ namespace akYacasChecker
                         retNd = new CoefficientProduct(c.Name, c.Factor * d.Value);
                         break;
                     }
+                //  both operands are CoefficientProduct ASTs
                 case "cprd-cprd":
                     {
                         //  c * d  ==>  cd
@@ -407,6 +459,7 @@ namespace akYacasChecker
                         retNd = new CoefficientProduct(c.Name, c.Factor * d.Factor);
                         break;
                     }
+                //  left operand is a CoefficientProduct, right is a unary operation AST
                 case "cprd-unary":
                     {
                         //  c * op z   ==> (op c) * z
@@ -418,6 +471,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  left operand is a CoefficientProduct, right is a variable
                 case "cprd-var":
                     {
                         //  c * v  ==>  cv
@@ -427,6 +481,7 @@ namespace akYacasChecker
                         retNd = new VariableProduct(v.Name, c.Factor);
                         break;
                     }
+                //  left operand is a CoefficientProduct, right is a variable product
                 case "cprd-vprd":
                     {
                         //  c * v  ==>  cv
@@ -443,6 +498,8 @@ namespace akYacasChecker
                 case "unary-unary":
                 case "unary-var":
                 case "unary-vprd":
+                    //  left operand is a unary operation, right "something"
+                    //  the unary op is pulled up, and the multiplication op pushed down
                     {
                         //  (op x) * y   ==> op (x * y)
                         UnaryOperationNode left = binOp.Left as UnaryOperationNode;
@@ -451,7 +508,7 @@ namespace akYacasChecker
                         retNd = ExpandUnary(nd);
                         break;
                     }
-
+                //  the left operand is a variable, the right op is a binary operation AST
                 case "var-binary":
                     {
                         //  v * (x op y)  ==> (v*x) op (v*y)
@@ -463,6 +520,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  the left operand is a variable, the right op is a ComplexNode AST
                 case "var-cplx":
                     {
                         //  v * c  ==> vc
@@ -473,6 +531,7 @@ namespace akYacasChecker
                         retNd = nd;
                         break;
                     }
+                //  the left operand is a variable, the right is a CoefficientProduct AST
                 case "var-cprd":
                     {
                         //  v * c  ==> vc
@@ -483,6 +542,7 @@ namespace akYacasChecker
                         retNd = nd;
                         break;
                     }
+                //  the left operand is a variable, the right is a unary operation AST
                 case "var-unary":
                     {
                         //  v * op z   ==> (op v) * z
@@ -494,6 +554,8 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
+                //  both operands are variables
+                //  they are multiplied to form a CoefficientProduct
                 case "var-var":
                     {
                         //  v * v   ==> vv
@@ -504,6 +566,8 @@ namespace akYacasChecker
                         retNd = nd;
                         break;
                     }
+                //  the left operand is a variable, the right is a variable product
+                //  both are multiplied to form a CoefficientProduct
                 case "var-vprd":
                     {
                         //  v * v   ==> vv
@@ -514,7 +578,7 @@ namespace akYacasChecker
                         retNd = nd;
                         break;
                     }
-
+                //  the left operand is a VariableProduct AST, the right a binary operation AST
                 case "vprd-binary":
                     {
                         //  v * (x op y)   ==> (v*x) op (v*y)
@@ -526,7 +590,7 @@ namespace akYacasChecker
                         retNd = ExpandBinary(nd);
                         break;
                     }
-
+                //  the left operand is a VariableProduct AST, the right a ComplexNode
                 case "vprd-cplx":
                     {
                         //  v * c  ==> vc
@@ -537,11 +601,13 @@ namespace akYacasChecker
                         retNd = nd;
                         break;
                     }
+                //  the left operand is a VariableProduct AST, the right a CooefficientProduct
                 case "vprd-cprd":
                     {
                         Fatal("vprd-cprd can't happen, we have only two coefficients in one product");
                         break;
                     }
+                //  the left operand is a VariableProduct, the right is a unary operation AST
                 case "vprd-unary":
                     {
                         //  v * op x  ==> op (v*x)
@@ -552,6 +618,8 @@ namespace akYacasChecker
                         retNd = ExpandUnary(nd);
                         break;
                     }
+                // the left operand is a VariableProduct, the right is a VariableNode
+                // They are multiplied to form a CoefficientProduct
                 case "vprd-var":
                     {
                         //  v * w   ==> vw
@@ -562,6 +630,8 @@ namespace akYacasChecker
                         retNd = nd;
                         break;
                     }
+                // both operands are VariableProduct ASTs
+                // They are multiplied to form a CoefficientProduct
                 case "vprd-vprd":
                     {
                         //  v * w   ==> vw
@@ -587,10 +657,20 @@ namespace akYacasChecker
         {
             UnaryOperationNode nd = new(unaryOp.Operator, Expand(unaryOp.Right));
 
-            if ((nd.Operator == TokenType.subtract) &&
-                (nd.Right is CoefficientProduct prod))
+            if (nd.Operator == TokenType.subtract)
             {
-                return new CoefficientProduct(prod.Name, -prod.Factor);
+                if (nd.Right is CoefficientProduct prod)
+                {
+                    return new CoefficientProduct(prod.Name, -prod.Factor);
+                }
+                else if (nd.Right is VariableProduct varProd)
+                {
+                    return new VariableProduct(varProd.Name, -varProd.Factor);
+                }
+            }
+            else
+            {
+                Fatal($"Unexpected unary operator '{unaryOp.Operator}'");
             }
 
             return nd;

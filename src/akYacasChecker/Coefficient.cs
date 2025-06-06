@@ -16,10 +16,6 @@ namespace akExtractMatMultSolution
 
         public Coefficient(double real, double imaginary = 0)
         {
-            if (real >= 500)
-            {
-                o();
-            }
             Real = real;
             Imaginary = imaginary;
         }

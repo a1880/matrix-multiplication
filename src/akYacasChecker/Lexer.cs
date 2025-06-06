@@ -4,6 +4,7 @@ using static akUtil.Util;
 namespace akExtractMatMultSolution
 {
     //  operators are ordered in decreasing priority
+    //  cf. string OperatorString(TokenType op) in AST.cs
     public enum TokenType 
     { 
         unknown, 
@@ -29,9 +30,11 @@ namespace akExtractMatMultSolution
 
         public readonly double Double()
         {
-            if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
+            if (!double.TryParse(text, NumberStyles.Float, 
+                                 CultureInfo.InvariantCulture, out double result))
             {
-                throw new SyntaxErrorException($"Cannot process '{text}' as double", this);
+                throw new SyntaxErrorException(
+                    $"Cannot process '{text}' as double", this);
             }
 
             return result;
@@ -40,6 +43,8 @@ namespace akExtractMatMultSolution
 
     /// <summary>
     /// Class to tokenize the string to be parsed by the Parser
+    /// Note that the Lexer is specialized to matrix multiplication scripts.
+    /// Therefore, variable names begin with a, b, c, or p
     /// </summary>
     class Lexer
     {
