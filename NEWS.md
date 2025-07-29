@@ -1,5 +1,7 @@
 # Change Log
 
+## 29-Jul-2025 type checking in paper
+
 ## 06-Jun-2025 akYacasChecker cleanup
 
 Added comments, refactored code
